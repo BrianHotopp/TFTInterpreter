@@ -1,19 +1,18 @@
-from turtle import left
 import pyautogui
 import numpy
 import uuid
 import cv2
 import time
-
+TOP_BAR_THICKNESS = 58
+RAW_SCREENSHOT_DIR = "data/raw/"
 def get_top_numbers():
-    top_offset = 58
     left_offset = 755
     width_of_numbers = 55 
     height_of_numbers = 38
     im2 = pyautogui.screenshot(
         region=(
             left_offset,
-            top_offset,
+            TOP_BAR_THICKNESS,
             width_of_numbers,
             height_of_numbers
         ))
@@ -40,14 +39,14 @@ if __name__ == "__main__":
         hist2 = cv2.normalize(hist2, hist2).flatten()
         # if compare is > 0 then top numbers changed
         compare = cv2.compareHist(hist1, hist2, 1) 
-        offset = 58
         # check to make sure we are not in a carousel round
         im = pyautogui.locateOnScreen('resources/noncarousel.PNG')
         planning_phase = compare > 0 and im is not None
         if planning_phase:
             print("in planning phase")
             for i in range(5):
-                print("take screenshot")
+                print("taking screenshot")
+                im = pyautogui.screenshot(RAW_SCREENSHOT_DIR+uuid.uuid4(), region=(0,TOP_BAR_THICKNESS, 1920, 1080))
                 time.sleep(1)
         else:
             print("not in planning phase")
