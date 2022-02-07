@@ -4,6 +4,7 @@ import uuid
 import cv2
 import time
 TOP_BAR_THICKNESS = 58
+RES = [1920, 1080]
 RAW_SCREENSHOT_DIR = "data/raw/"
 def get_top_numbers():
     left_offset = 755
@@ -46,7 +47,7 @@ if __name__ == "__main__":
             print("in planning phase")
             for i in range(5):
                 print("taking screenshot")
-                im = pyautogui.screenshot(RAW_SCREENSHOT_DIR+uuid.uuid4(), region=(0,TOP_BAR_THICKNESS, 1920, 1080))
+                im = pyautogui.screenshot(RAW_SCREENSHOT_DIR+uuid.uuid4()+".png", region=(0,TOP_BAR_THICKNESS, RES[0], RES[1]))
                 time.sleep(1)
         else:
             print("not in planning phase")
