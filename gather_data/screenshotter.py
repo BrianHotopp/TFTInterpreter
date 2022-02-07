@@ -41,13 +41,14 @@ if __name__ == "__main__":
         # if compare is > 0 then top numbers changed
         compare = cv2.compareHist(hist1, hist2, 1) 
         # check to make sure we are not in a carousel round
-        im = pyautogui.locateOnScreen('resources/noncarousel.PNG')
-        planning_phase = compare > 0 and im is not None
+        im = pyautogui.locateOnScreen('resources/noncarousel.PNG', confidence = 0.8)
+        im2 = pyautogui.locateOnScreen('resources/noncarousel2.PNG', confidence = 0.8)
+        planning_phase = compare > 0 and (im is not None or im2 is not None)
         if planning_phase:
             print("in planning phase")
             for i in range(5):
                 print("taking screenshot")
-                im = pyautogui.screenshot(RAW_SCREENSHOT_DIR+uuid.uuid4()+".png", region=(0,TOP_BAR_THICKNESS, RES[0], RES[1]))
+                im = pyautogui.screenshot(RAW_SCREENSHOT_DIR+str(uuid.uuid4())+".png", region=(0,TOP_BAR_THICKNESS, RES[0], RES[1]))
                 time.sleep(1)
         else:
             print("not in planning phase")
