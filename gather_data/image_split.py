@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import cv2
+from pandas import read_csv
 
 def hex_crop(img, pts):
     # crop bounding rectangle
@@ -20,6 +22,7 @@ if __name__ == "__main__":
     img = cv2.imread("merge_hexes.png")
 
     pts = []
+    # (x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5), (x6, y6)
     pts.append([[500, 430],[560, 400],[620,430],[620,480],[560,500],[500,480]]) # 1
     pts.append([[630, 430],[680, 400],[730,430],[730,480],[680,500],[630,480]]) # 2
     pts.append([[740, 430],[790, 400],[840,430],[840,480],[790,500],[740,480]]) # 3
@@ -53,11 +56,19 @@ if __name__ == "__main__":
     pts.append([[1310, 670],[1370, 640],[1430,670],[1430,720],[1370,740],[1310,720]]) # 28
 
     pts = np.array(pts)
+    # np.reshape(28, -1)
+    # x = np.loadtxt(open("coordinates.csv", "rb"), delimiter=",", skiprows=1)
+    # x = np.genfromtxt("coordinates.csv", delimiter=",")
+    df = read_csv('coordinates.csv')
+    data = df.values
+    print(data)
+    # df = pd.DataFrame(pts)
+    # np.savetxt("coordinates.csv", pts, delimiter=",")
 
     # write to png
-    i = 1
-    for h in pts:
-        res = hex_crop(img, h)
-        path = "test_split/test_cropped" + str(i) + ".png"
-        cv2.imwrite(path, res)
-        i += 1
+    # i = 1
+    # for h in pts:
+    #     res = hex_crop(img, h)
+    #     path = "test_split/test_cropped" + str(i) + ".png"
+    #     cv2.imwrite(path, res)
+    #     i += 1
