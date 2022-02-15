@@ -1,13 +1,55 @@
 import numpy as np
 import pandas as pd
-import cv2
 from pandas import read_csv
+import cv2
 
-def hex_crop(img, pts):
+def read_hex(hex_csv):
+    '''
+    This function reads the coordinates of a hexagonal shape from a csv.
+    '''
+
+    df = read_csv(hex_csv)
+    data = df.values
+    hex_pts = []
+    for i in range(28):
+        # vertices of each hexagon
+        x1_y1 = [data[i][0], data[i][1]]
+        x2_y2 = [data[i][2], data[i][3]]
+        x3_y3 = [data[i][4], data[i][5]]
+        x4_y4 = [data[i][6], data[i][7]]
+        x5_y5 = [data[i][8], data[i][9]]
+        x6_y6 = [data[i][10], data[i][11]]
+        hex_pts.append([x1_y1, x2_y2, x3_y3, x4_y4, x5_y5, x6_y6])
+    return np.array(hex_pts)
+
+def read_rect(rect_csv):
+    '''
+    This function reads the coordinates of a rectangular shape from a csv.
+    '''
+
+    df = read_csv(rect_csv)
+    data = df.values
+    rect_pts = []
+    for i in range(9):
+        # vertices of each rectangle
+        x1_y1 = [data[i][0], data[i][1]]
+        x2_y2 = [data[i][2], data[i][3]]
+        x3_y3 = [data[i][4], data[i][5]]
+        x4_y4 = [data[i][6], data[i][7]]
+        rect_pts.append([x1_y1, x2_y2, x3_y3, x4_y4])
+    return np.array(rect_pts)
+
+def crop(img, pts, rect=False):
+    '''
+    This function crops out the image with the given points and returns the cropped image.
+    '''
+
     # crop bounding rectangle
     rect = cv2.boundingRect(pts)
     x,y,w,h = rect
     cropped = img[y:y+h, x:x+w].copy()
+    if rect:
+        return cropped
 
     # make mask
     pts = pts - pts.min(axis=0)
@@ -18,57 +60,31 @@ def hex_crop(img, pts):
     res = cv2.bitwise_and(cropped, cropped, mask=mask)
     return res
 
-if __name__ == "__main__":
-    img = cv2.imread("merge_hexes.png")
+def split_img(file_name):
+    '''
+    This function splits a TFT screenshot into the different blocks of the planning phase given an image file name.
+    It saves the split images to the test_split directory.
+    '''
 
-    pts = []
-    # (x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5), (x6, y6)
-    pts.append([[500, 430],[560, 400],[620,430],[620,480],[560,500],[500,480]]) # 1
-    pts.append([[630, 430],[680, 400],[730,430],[730,480],[680,500],[630,480]]) # 2
-    pts.append([[740, 430],[790, 400],[840,430],[840,480],[790,500],[740,480]]) # 3
-    pts.append([[860, 430],[910, 400],[960,430],[960,480],[910,500],[860,480]]) # 4
-    pts.append([[980, 430],[1030, 400],[1080,430],[1080,480],[1030,500],[980,480]]) # 5
-    pts.append([[1090, 430],[1140, 400],[1190,430],[1190,480],[1140,500],[1090,480]]) # 6
-    pts.append([[1210, 430],[1260, 400],[1310,430],[1310,480],[1260,500],[1210,480]]) # 7
+    # open image
+    img = cv2.imread(file_name)
 
-    pts.append([[550, 500],[610, 470],[670,500],[670,550],[610,570],[550,550]]) # 8
-    pts.append([[680, 500],[730, 470],[780,500],[780,550],[730,570],[680,550]]) # 9
-    pts.append([[800, 500],[850, 470],[900,500],[900,550],[850,570],[800,550]]) # 10
-    pts.append([[920, 500],[970, 470],[1020,500],[1020,550],[970,570],[920,550]]) # 11
-    pts.append([[1040, 500],[1090, 470],[1140,500],[1140,550],[1090,570],[1040,550]]) # 12
-    pts.append([[1150, 500],[1210, 470],[1270,500],[1270,550],[1210,570],[1150,550]]) # 13
-    pts.append([[1280, 500],[1330, 470],[1380,500],[1380,550],[1330,570],[1280,550]]) # 14
+    # hexagon coordinates
+    hex_pts = read_hex('hex_coords.csv')
 
-    pts.append([[480, 580],[540, 550],[600,580],[600,630],[540,650],[480,630]]) # 15
-    pts.append([[610, 580],[660, 550],[710,580],[710,630],[660,650],[610,630]]) # 16
-    pts.append([[730, 580],[780, 550],[830,580],[830,630],[780,650],[730,630]]) # 17
-    pts.append([[850, 580],[900, 550],[950,580],[950,630],[900,650],[850,630]]) # 18
-    pts.append([[980, 580],[1030, 550],[1080,580],[1080,630],[1030,650],[980,630]]) # 19
-    pts.append([[1100, 580],[1160, 550],[1220,580],[1220,630],[1160,650],[1100,630]]) # 20
-    pts.append([[1230, 580],[1280, 550],[1340,580],[1340,630],[1280,650],[1230,630]]) # 21
-
-    pts.append([[530, 670],[580, 640],[630,670],[630,720],[580,740],[530,720]]) # 22
-    pts.append([[650, 670],[710, 640],[770,670],[770,720],[710,740],[650,720]]) # 23
-    pts.append([[790, 670],[850, 640],[910,670],[910,720],[850,740],[790,720]]) # 24
-    pts.append([[920, 670],[980, 640],[1040,670],[1040,720],[980,740],[920,720]]) # 25
-    pts.append([[1050, 670],[1110, 640],[1170,670],[1170,720],[1110,740],[1050,720]]) # 26
-    pts.append([[1180, 670],[1240, 640],[1300,670],[1300,720],[1240,740],[1180,720]]) # 27
-    pts.append([[1310, 670],[1370, 640],[1430,670],[1430,720],[1370,740],[1310,720]]) # 28
-
-    pts = np.array(pts)
-    # np.reshape(28, -1)
-    # x = np.loadtxt(open("coordinates.csv", "rb"), delimiter=",", skiprows=1)
-    # x = np.genfromtxt("coordinates.csv", delimiter=",")
-    df = read_csv('coordinates.csv')
-    data = df.values
-    print(data)
-    # df = pd.DataFrame(pts)
-    # np.savetxt("coordinates.csv", pts, delimiter=",")
-
+    # rectangle coordinates
+    rect_pts = read_rect('rect_coords.csv')
+    
     # write to png
-    # i = 1
-    # for h in pts:
-    #     res = hex_crop(img, h)
-    #     path = "test_split/test_cropped" + str(i) + ".png"
-    #     cv2.imwrite(path, res)
-    #     i += 1
+    for i in range(len(hex_pts)):
+        res = crop(img, hex_pts[i])
+        path = "test_split/test_hex" + str(i+1) + ".png"
+        cv2.imwrite(path, res)
+
+    for j in range(len(rect_pts)):
+        res = crop(img, rect_pts[j], rect=True)
+        path = "test_split/test_rect" + str(j+1) + ".png"
+        cv2.imwrite(path, res)
+
+if __name__ == "__main__":
+    split_img("merge_hexes.png")
