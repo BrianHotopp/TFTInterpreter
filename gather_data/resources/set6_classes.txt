@@ -57,6 +57,6 @@ Poppy, popp
 Corki, cork
 Lulu, lulu
 Gnar, gnar
-Viegar, vieg
+Veigar, veig
 Brand, bran
 Silco, silc

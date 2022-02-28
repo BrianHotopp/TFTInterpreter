@@ -15,11 +15,12 @@ import codecs
 import pandas as pd
 # read set 6 units in 
 SET_6_UNITS = dict()
-with open("./resources/set6_classes.txt") as classes_file_handle:
+with open("code/gather_data/resources/set6_classes.txt") as classes_file_handle:
     for line in classes_file_handle.readlines():
         unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
         SET_6_UNITS[unit_name] = abbreviated_name
 #print(SET_6_UNITS)
+# typos that I made during data entry
 typos = dict()
 typos["quinn"] = "quin"
 typos["leona"] = "leon"
@@ -27,9 +28,10 @@ typos["silco"] = "silc"
 typos["syra"] = "zyra"
 typos["brand"] = "bran"
 typos["lcui"] = "luci"
+typos["poppy"] = "popp"
 
 
-def cleanxml(location):
+def crawl_labels(location):
     # To parse the xml files
     import xml.etree.ElementTree as ET
 
@@ -39,7 +41,6 @@ def cleanxml(location):
     counts = dict()
     # Run through all the files
     non = set()
-    i = 0
     for file in os.listdir(location):
         # Check the file name ends with xml
         if not file.endswith(".xml"):
@@ -51,21 +52,19 @@ def cleanxml(location):
         # Open the xml name
         tree = ET.parse(file_whole_name)
         root = tree.getroot()
-        if root.find("folder").text != "raw":
-            root.find("folder").text = "raw"
-            filename = root.find("filename")
-            root.find("path").text = f"E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw\{filename.text}"
-            i+=1
-        tree.write(file_whole_name)
-    print(f"changed {i} files")
+
+        # Get the width, height of images
+        #  to normalize the bounding boxes
+        size = root.find("size")
+        width, height = float(size.find("width").text), float(size.find("height").text)
+        # Each object represents each actual image label
+        labels = root.findall('object')
+        if not labels:
+          print("File '%s' contained no labels" % (file_whole_name,))
+        for member in labels:
+            box = member.find('bndbox')
+            label = member.find('name').text
 
 
 if __name__ == "__main__":
-    # Add the argument parse
-    arg_p = argparse.ArgumentParser()
-    arg_p.add_argument("-l", "--local_labels_dir",
-                       required=True,
-                       type=str,
-                       help="path to parent directory containing all the xml file labels")
-    args = vars(arg_p.parse_args())
-    cleanxml(args["local_labels_dir"])
+    crawl_labels("datadump/TFTInterpreterData/annotations")

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Name: cleaner.py
+Name: tally_data.py
 Author: Brian Hotopp 
 Contact: brihoto@gmail.com  
 Time: 2022.02.25
@@ -22,28 +22,28 @@ with open("./resources/set6_classes.txt") as classes_file_handle:
 
 
 
-def cleanxml(location):
-    # To parse the xml files
+def count_units(location):
+    """
+    location: the directory where label files are stored
+    returns: None, prints the number of training examples we have for each unit
+    """
     import xml.etree.ElementTree as ET
 
-    # Return list
-    # the elements of this list represent rows of a csv
     temp_res = []
+    # initalize the counts dict
     counts = dict()
     for key in SET_6_UNITS.values():
         counts[key] = 0
 
-    # Run through all the files
+    # Run through all the label files
     non = set()
     for file in os.listdir(location):
-        # Check the file name ends with xml
+        # skip files that don't end in .xml
         if not file.endswith(".xml"):
             continue
-
         # Get the file name
         file_whole_name = f"{location}/{file}"
-
-        # Open the xml name
+        # Open the file
         tree = ET.parse(file_whole_name)
         root = tree.getroot()
 
@@ -56,7 +56,12 @@ def cleanxml(location):
         for label_object in root.findall("object"):
             # Class label
             classname = label_object.find("name").text
-            counts[classname] +=1 
+            try:
+                counts[classname] +=1 
+            except:
+                print(classname)
+                print(file_whole_name)
+    # sort the dict and print
     a = {k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}
     for key in a.keys():
         if a[key] < 1000:
@@ -70,4 +75,4 @@ if __name__ == "__main__":
                        type=str,
                        help="path to parent directory containing all the xml file labels")
     args = vars(arg_p.parse_args())
-    cleanxml(args["local_labels_dir"])
+    count_units(args["local_labels_dir"])
