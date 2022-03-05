@@ -3,7 +3,7 @@ Twitch, twit
 Warwick, warw
 Tryndamere, tryn
 Zac, zac
-Renata, rena
+Renata Glasc, rena
 Viktor, vikt
 Camille, cami
 Zilean, zile

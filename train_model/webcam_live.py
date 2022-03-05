@@ -41,7 +41,7 @@ def main():
     if load_model:
         model_load_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
         model = Model.load(model_load_path, labels)
-        detect_live(model, score_filter=0.7)
+        detect_live(model, score_filter=0.5)
        
     else:
         model_save_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"

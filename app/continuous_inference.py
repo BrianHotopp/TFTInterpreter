@@ -80,19 +80,19 @@ def main():
 
     annotations_dir = args["local_labels_dir"]
     images_dir = args["local_images_dir"]
-
+    dataset = Dataset(annotations_dir, images_dir)
+    loader = DataLoader(dataset, batch_size=2, shuffle=False)
     labels = list(SET_6_UNITS.values())
     load_model = True 
     if load_model:
-        model_load_path = "/home/brianhotopp/Dropbox/Spring 2022/Software Design and Documentation/code/models/10epoch.pth"
-        #model_load_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
+        model_load_path = "code/models/10epoch.pth"
+        #model_load_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
         model = Model.load(model_load_path, labels)
         #test_image_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw\\1.png"
-        test_image_path = "/home/brianhotopp/Dropbox/Spring 2022/Software Design and Documentation/datadump/TFTInterpreterData/raw/1150.png"
+        test_image_path = "datadump/TFTInterpreterData/raw/1000.png"
         custom_make_prediction(model, test_image_path)
+
     else:
-        dataset = Dataset(annotations_dir, images_dir)
-        loader = DataLoader(dataset, batch_size=2, shuffle=False)
         model_save_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
         model = Model(labels)
         model.fit(loader, dataset, verbose=True, epochs=10)
