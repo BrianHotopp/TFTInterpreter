@@ -20,7 +20,7 @@ class TFT_GUI:
     get_recommendation(units_on_board: list[str]) -> dict[str, float]
     giving you a dict of recommended units to buy and some kind of rating for each recommended unit
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the GUI.
         Args:
@@ -37,6 +37,12 @@ class TFT_GUI:
         height = bottom - top
 
         self.master = tk.Tk()
+
+        # set icon for master window
+        try:
+            self.master.iconbitmap("../favicon.ico")
+        except:
+            print("Couldn't load icon.")
 
         # remove top bar
         self.master.overrideredirect(True)
@@ -112,7 +118,7 @@ class TFT_GUI:
         self.master.wm_attributes("-topmost", 1)
         self.master.mainloop()
 
-    def show_hide(self):
+    def show_hide(self) -> None:
         """
         The command for showing and hiding the whole GUI.
         Args:
@@ -131,7 +137,7 @@ class TFT_GUI:
                 self.master.lift()
                 self.master.attributes("-topmost", True)
 
-    def alt_tab(self):
+    def alt_tab(self) -> None:
         """
         This function is called whenever the user clicks alt+tab on the keyboard.
         Args:
@@ -145,7 +151,7 @@ class TFT_GUI:
         else:
             self.show_hide()
 
-    def mouse_click(self):
+    def mouse_click(self) -> None:
         """
         This function is called to withdraw if a click is registered outside the GUI.
         Args:
@@ -164,7 +170,7 @@ class TFT_GUI:
         # reset global variables to false
         self.c.reset()
 
-    def file_menu(self):
+    def file_menu(self) -> None:
         """
         Account for the file menu being clicked.
         Args:
@@ -173,7 +179,7 @@ class TFT_GUI:
         self.c.file = True
         self.master.after(100, self.file_menu)
 
-    def help(self):
+    def help(self) -> None:
         """
         Account for the help menu being clicked.
         Args:
@@ -182,7 +188,7 @@ class TFT_GUI:
         self.c.help = True
         self.master.after(100, self.help)
 
-    def help_index(self):
+    def help_index(self) -> None:
         """
         Account for the help index button being clicked.
         Args:
@@ -191,7 +197,7 @@ class TFT_GUI:
         self.c.help_index = True
         self.master.after(100, self.help_index)
 
-    def about(self):
+    def about(self) -> None:
         """
         Account for the about button being clicked.
         Args:
@@ -221,7 +227,7 @@ class TFT_GUI:
             exist without the extensive and heavy installations.").pack()
         tk.Button(top, text="Close", command=lambda: self.hide_about(top)).pack()
 
-    def hide_about(self, top: tk.Toplevel):
+    def hide_about(self, top: tk.Toplevel) -> None:
         """
         Account for the close button being clicked in the about menu.
         Args:
@@ -231,7 +237,7 @@ class TFT_GUI:
         self.c.close_about = True
         top.destroy()
 
-    def quit_program(self):
+    def quit_program(self) -> None:
         """
         Quit the whole program.
         Args:

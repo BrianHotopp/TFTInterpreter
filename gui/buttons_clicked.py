@@ -7,7 +7,7 @@ class Clicks:
     is open. It will then tell the GUI to close the window as it is
     not needed to be open.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the status of all the buttons to false.
         Args:
@@ -21,7 +21,7 @@ class Clicks:
         self.file = False
         self.close_about = False
 
-    def check_clicks(self):
+    def check_clicks(self) -> bool:
         """
         Check if any button has been clicked. If yes, return false. If no, return true.
         Args:
@@ -33,7 +33,7 @@ class Clicks:
             return True
         return False
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset all the clicks to be false (no button is being clicked).
         Args:

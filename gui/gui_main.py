@@ -5,6 +5,22 @@ import psutil
 # Local Imports
 from gui import TFT_GUI
 
+# download requirements for a specific folder
+# pipreqs path/to/project
+# autopytoexe (for creating exe)
+
+# needed to install from the download (python 3.9, x64)
+# https://github.com/mhammond/pywin32/releases
+
+# pip install psutil
+# pip install keyboard
+# pip install mouse
+
+# pyinstaller --onefile C:\Users\gwyne\Documents\GitHub\TFTInterpreter\gui\gui_main.py -w
+
+# TO DO:
+# - add in widget/box for statistics
+# - add in widget/box for analytics (suggestions)
 
 if __name__ == "__main__":
     # only run the GUI if the League Client is open
