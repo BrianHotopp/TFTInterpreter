@@ -1,4 +1,5 @@
 /gather_data/data
 models
+env
 data
 __pycache__
