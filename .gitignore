@@ -1,5 +1,4 @@
 /gather_data/data
 models
 data
-gui/__pycache__/gui.cpython-310.pyc
-gui/__pycache__/buttons_clicked.cpython-310.pyc
+__pycache__
