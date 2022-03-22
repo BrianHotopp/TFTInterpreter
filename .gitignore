@@ -2,4 +2,5 @@
 models
 env
 data
+src/gui/build/
 __pycache__
