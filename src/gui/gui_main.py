@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python3.9
 # Third Party Imports
 import psutil
 
@@ -21,6 +21,7 @@ from gui import TFT_GUI
 # TO DO:
 # - add in widget/box for statistics
 # - add in widget/box for analytics (suggestions)
+# - fix exe (window opens in the wrong spot)
 
 if __name__ == "__main__":
     # only run the GUI if the League Client is open
