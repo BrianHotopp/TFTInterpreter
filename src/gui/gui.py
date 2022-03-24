@@ -1,10 +1,12 @@
 #!python
 # Third Party Imports
+import datetime
 import tkinter as tk
-from win32 import win32gui
 import mouse
 import keyboard
-
+import threading
+import time
+import uuid
 # Local Imports
 from buttons_clicked import Clicks
 
@@ -20,6 +22,7 @@ class TFT_GUI:
     get_recommendation(units_on_board: list[str]) -> dict[str, float]
     giving you a dict of recommended units to buy and some kind of rating for each recommended unit
     """
+
     def __init__(self) -> None:
         """
         Initialize the GUI.
@@ -27,7 +30,9 @@ class TFT_GUI:
             self: the current gui object
         """
         # get window handle and set League Client as foreground
-        hwnd = win32gui.FindWindow(None, "League of Legends")
+        self.window_name = "League of Legends (TM) Client"
+        """
+        hwnd = win32gui.FindWindow(None, self.window_name)
         win32gui.ShowWindow(hwnd, 1)
         win32gui.SetForegroundWindow(hwnd)
 
@@ -36,47 +41,28 @@ class TFT_GUI:
         width = right - left
         height = bottom - top
 
-        self.master = tk.Tk()
+        """
 
+        self.master = tk.Tk()
+        # change title
+        self.master.title("The Interpreter")
         # set icon for master window
         try:
             self.master.iconbitmap("../favicon.ico")
         except:
             print("Couldn't load icon.")
 
-        # remove top bar
-        self.master.overrideredirect(True)
-
-        # change title
-        self.master.title("The Interpreter")
-
-        # adjust window geometry to account for top bar
-        new_y = top-20
-        self.master.geometry(f"{width}x{height}+{left}+{new_y}")
-
-        # transparent backgroun to make it an overlay
-        self.master.config(bg = '#add123')
-        self.master.wm_attributes('-transparentcolor','#add123')
+        self.master.geometry(f"{500}x{200}")
 
         # create variables to check for widgets clicked
         self.c = Clicks()
 
         # add buttons
-        # label1 = tk.Label(self.master, text="Label1").pack(side="bottom")
         # label2 = tk.Label(self.master, text="Label2").pack(side="left")
         # tk.Button(self.master, text="Quit", command=self.do_nothing).pack(side="right")
         # tk.Button(self.master, text="Hide", command=self.do_nothing).pack(side="right")
 
-        # add keyboard hotkeys (keybinds)
-        keyboard.add_hotkey('alt+`', lambda: self.show_hide())
-        keyboard.add_hotkey('ctrl+q', lambda: self.master.quit())
-        keyboard.add_hotkey('alt+tab', lambda: self.alt_tab())
-
         # add mouse clicks
-        mouse.on_click(lambda: self.mouse_click())
-        mouse.on_right_click(lambda: self.mouse_click())
-        mouse.on_middle_click(lambda: self.mouse_click())
-
         # create menu bar
         menubar = tk.Menu(self.master)
 
@@ -109,66 +95,36 @@ class TFT_GUI:
         helpmenu.add_command(label="Help Index", command=self.help_index)
         helpmenu.add_command(label="About", command=self.about)
         menubar.add_cascade(label="Help", menu=helpmenu)
-
         # configure the window
         self.master.config(menu=menubar)
-
-        # show tkinter window on top of tft client
-        self.master.lift()
-        self.master.wm_attributes("-topmost", 1)
+        """
+        do live inference on a second thread, code mostly from 
+        https://stackoverflow.com/questions/64287940/update-tkinter-gui-from-a-separate-thread-running-a-command
+        """
+        self.units_on_board = tk.StringVar(self.master, "Units currently on the board")
+        self.lbl = tk.Label(self.master, text="Start")
+        self.lbl.pack(side="top")
+        thd = threading.Thread(target=self.timecnt)
+        thd.daemon = True
+        thd.start()
+        self.master.bind("<<event1>>", self.eventhandler)
         self.master.mainloop()
+        # when the ui dies, wait for the async thread to finish
+        thd.join()
 
-    def show_hide(self) -> None:
-        """
-        The command for showing and hiding the whole GUI.
-        Args:
-            self: the current gui object
-        """
+    def timecnt(self):  # runs in background thread
+        print('Timer Thread', threading.get_ident())  # background thread id
+        for x in range(10):
+            self.master.event_generate("<<event1>>", when="tail", state=123)  # trigger event in main thread
+            self.units_on_board.set(' ' * 15 + str(x))  # update text entry from background thread
+            time.sleep(1)  # one second
 
-        # make sure the League Client is in the foreground
-        if win32gui.GetWindowText(win32gui.GetForegroundWindow()) \
-            == "League of Legends":
-            # if the window can be seen, hide it.
-            # if not, show it.
-            if self.master.winfo_viewable():
-                self.master.withdraw()
-            else:
-                self.master.wm_deiconify()
-                self.master.lift()
-                self.master.attributes("-topmost", True)
-
-    def alt_tab(self) -> None:
-        """
-        This function is called whenever the user clicks alt+tab on the keyboard.
-        Args:
-            self: the current gui object
-        """
-        # if the GUI is viewable and the Client is in the foreground, hide.
-        if self.master.winfo_viewable():
-            if win32gui.GetWindowText(win32gui.GetForegroundWindow()) \
-                != "League of Legends":
-                self.master.withdraw()
-        else:
-            self.show_hide()
-
-    def mouse_click(self) -> None:
-        """
-        This function is called to withdraw if a click is registered outside the GUI.
-        Args:
-            self: the current gui object
-        """
-        # CLICK DOESN'T WORK AFTER "ABOUT" IS PRESSED AND CLOSED
-
-        # if the buttons haven't been clicked (means a click is outside the GUI)
-        if self.c.check_clicks():
-            # if the window is currently visible, hide if League Client is not in the foreground.
-            if self.master.winfo_viewable():
-                if win32gui.GetWindowText(win32gui.GetForegroundWindow()) \
-                    != "League of Legends":
-                    self.master.withdraw()
-
-        # reset global variables to false
-        self.c.reset()
+    def eventhandler(self, evt):  # runs in main thread
+        print('Event Thread', threading.get_ident())  # event thread id (same as main)
+        print(evt.state)  # 123, data from event
+        string = datetime.datetime.now().strftime('%I:%M:%S %p')
+        self.lbl.config(text=string)  # update widget
+        # txtvar.set(' '*15 + str(evt.state))  # update text entry in main thread
 
     def file_menu(self) -> None:
         """
@@ -205,27 +161,15 @@ class TFT_GUI:
         """
         self.c.about = True
         top = tk.Toplevel(self.master)
-
-        # get window size and position
-        window_width = self.master.winfo_width()
-        window_height = self.master.winfo_height()
-        x = self.master.winfo_x()
-        y = self.master.winfo_y()
-
-        # size to half the current window, position in the middle of the screen
-        new_width = window_width // 2
-        new_height = window_height // 2
-        top.geometry(f"{new_width}x{new_height}+{x + new_width//2}+{y + new_height//2}")
-
+        top.geometry(f"{400}x{200}")
         top.title("About")
-
         # add about text
+        about_text = """We are a group of students at RPI who originally 
+            designed this for a class.\n The goal of the TFT Interpreter was
+            to create a product similar to other overlays that currently 
+            exist without the extensive and heavy installations"""
         tk.Label(top, text="About Us").pack()
-        tk.Label(top, text="We are a group of students at RPI who originally \
-            designed this for a class.\nThe goal of the TFT Interpreter was \
-            to create a product similar to other overlays\nthat currently \
-            exist without the extensive and heavy installations.").pack()
-        tk.Button(top, text="Close", command=lambda: self.hide_about(top)).pack()
+        tk.Label(top, text=about_text).pack()
 
     def hide_about(self, top: tk.Toplevel) -> None:
         """

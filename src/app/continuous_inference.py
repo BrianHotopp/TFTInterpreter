@@ -9,50 +9,62 @@ from detecto.core import Dataset, DataLoader, Model
 import matplotlib.pyplot as plt
 import torchvision.ops.boxes as bops
 
-
-
 import numpy as np
 import matplotlib.pyplot as plt
-#def get_best(labels, boxes, scores):
-def custom_make_prediction(model, image_path):
-    start = time.time()
-    img = utils.read_image(image_path)
-    labels, boxes, scores = model.predict(img)
-    all_preds = filter(lambda x: x[2] > 0.2, zip(labels, boxes, scores))
-    best = []
-    thresh = 0.4
-    found_in_best = 0
-    # for each prediction
-    # check if there is a similar bounding box in best
-    # if there is, add the current prediction to that bounding box
-    # if there isn't, add the current bounding box: label, confidence to the list
-    for p in all_preds:
+
+
+class Predictor:
+    def __init__(self, model):
+        self._model = model
+
+    def from_file(self, path_to_model):
+        """
+        path_to_model: str path to the model to initialize the Predictor from
+        initializes a predictor object from a model saved to disk
+        """
+
+    def predict_on_image(self, image_path, show_image_popup=False):
+        """
+        Params:
+        image_path: str path to the image to predict on
+        Returns:
+        labels: list[str] representing the units on the board
+        makes a prediction of units on the board using a screenshot
+        """
+        img = utils.read_image(image_path)
+        labels, boxes, scores = self._model.predict(img)
+        all_preds = filter(lambda x: x[2] > 0.2, zip(labels, boxes, scores))
+        best = []
+        thresh = 0.4
         found_in_best = 0
-        label = p[0]
-        bbox = p[1]
-        conf = p[2]
-        bbox = torch.reshape(bbox, (1, 4))
-        for b in best:
-            cur_bbox = torch.reshape(b[0],(1, 4))
-            if bops.box_iou(cur_bbox, bbox) > thresh:
-                b[1].append((p[0], p[2]))
-                found_in_best = 1
-                break
-        if not found_in_best:
-            best.append((bbox, [(label, conf)]))
-    best = [(x[0], max(x[1], key=lambda z: z[1])) for x in best]
-    boxes, labelsandscores = zip(*best)
-    labels, scores = zip(*labelsandscores)
-    for i in boxes:
-        print(i)
-    boxes = [torch.reshape(x, (4,)) for x in boxes]
-    boxes = torch.stack(boxes)
-    end = time.time()
-    print(f"Prediction took {end-start} seconds")
-    print(labels)
-    labels = [labels[i]+"{:.2f}".format(scores[i]) for i in range(len(labels))]
-    show_labeled_image(img, boxes, labels)
-    return labels, boxes, scores 
+        # for each prediction
+        # check if there is a similar bounding box in best
+        # if there is, add the current prediction to that bounding box
+        # if there isn't, add the current bounding box: label, confidence to the list
+        for p in all_preds:
+            found_in_best = 0
+            label = p[0]
+            bbox = p[1]
+            conf = p[2]
+            bbox = torch.reshape(bbox, (1, 4))
+            for b in best:
+                cur_bbox = torch.reshape(b[0], (1, 4))
+                if bops.box_iou(cur_bbox, bbox) > thresh:
+                    b[1].append((p[0], p[2]))
+                    found_in_best = 1
+                    break
+            if not found_in_best:
+                best.append((bbox, [(label, conf)]))
+        best = [(x[0], max(x[1], key=lambda z: z[1])) for x in best]
+        boxes, labelsandscores = zip(*best)
+        labels, scores = zip(*labelsandscores)
+        boxes = [torch.reshape(x, (4,)) for x in boxes]
+        boxes = torch.stack(boxes)
+        labels = [labels[i] + "{:.2f}".format(scores[i]) for i in range(len(labels))]
+        if show_image_popup:
+            show_labeled_image(img, boxes, labels)
+        return labels, boxes, scores
+
 
 def main():
     arg_p = argparse.ArgumentParser()
@@ -69,7 +81,7 @@ def main():
                        required=True,
                        type=str,
                        help="csv file containing names and abbreviations for the units from the current set")
-               
+
     args = vars(arg_p.parse_args())
     # read set 6 units in 
     SET_6_UNITS = dict()
@@ -83,21 +95,24 @@ def main():
     dataset = Dataset(annotations_dir, images_dir)
     loader = DataLoader(dataset, batch_size=2, shuffle=False)
     labels = list(SET_6_UNITS.values())
-    load_model = True 
+    load_model = True
     if load_model:
         model_load_path = "code/models/10epoch.pth"
-        #model_load_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
+        # model_load_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
         model = Model.load(model_load_path, labels)
-        #test_image_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw\\1.png"
+        p = Predictor(model)
+        # test_image_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw\\1.png"
         test_image_path = "datadump/TFTInterpreterData/raw/1000.png"
-        custom_make_prediction(model, test_image_path)
+        p.predict_on_image(test_image_path)
 
     else:
-        model_save_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
+        model_save_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
         model = Model(labels)
         model.fit(loader, dataset, verbose=True, epochs=10)
         print("saving model")
         model.save(model_save_path)
+
+
 if __name__ == "__main__":
-    #test_detecto_working()
+    # test_detecto_working()
     main()

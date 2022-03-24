@@ -1,6 +1,7 @@
 /gather_data/data
 models
 env
+venv
 data
 src/gui/build/
 __pycache__

@@ -3,24 +3,28 @@ from tkinter import ALL
 from webbrowser import get
 import itertools
 
+
 class Unit():
     def __init__(self, name, abb, origins, classes, cost) -> None:
         self.name = name
         self.abb = abb
         self.origins = origins
         self.classes = classes
-        self.cost = cost 
+        self.cost = cost
+
     def __str__(self) -> str:
         return f"{self.name} {self.abb} {self.origins} {self.classes} {self.cost}"
+
+
 def consume(origins_classes_list, curr_origin_class, splits):
     num_origin_class = origins_classes_list.count(curr_origin_class)
     for split in splits:
-        if  num_origin_class >= split:
+        if num_origin_class >= split:
             for i in range(num_origin_class):
                 origins_classes_list.remove(curr_origin_class)
             break
-    
-    
+
+
 def is_perfect_synergy(units):
     all_stuff = []
     for unit in units:
@@ -59,16 +63,21 @@ def is_perfect_synergy(units):
     consume(all_stuff, "Transformer", [1])
     consume(all_stuff, "Twinshot", [2, 3, 4, 5])
     l = len(all_stuff)
-    return  l == 0
+    return l == 0
+
+
 def test_is_perfect_synergy():
-        a = Unit("a", "b", set(["Chemtech"]), set(), "1")
-        z = Unit("a", "b", set(["Syndicate"]), set(), "1")
-        b = [a, a, a, z]
-        c = is_perfect_synergy(b)
-        print(f"is perfect synergy: {c}")
+    a = Unit("a", "b", set(["Chemtech"]), set(), "1")
+    z = Unit("a", "b", set(["Syndicate"]), set(), "1")
+    b = [a, a, a, z]
+    c = is_perfect_synergy(b)
+    print(f"is perfect synergy: {c}")
+
+
 def get_perfect_synergies(units_on_board):
     SET_6_UNITS = dict()
-    with open("E:\Dropbox\Spring 2022\Software Design and Documentation\code\gather_data\\resources\set6_classes.txt") as classes_file_handle:
+    with open(
+            "E:\Dropbox\Spring 2022\Software Design and Documentation\code\gather_data\\resources\set6_classes.txt") as classes_file_handle:
         for line in classes_file_handle.readlines():
             unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
             SET_6_UNITS[unit_name] = abbreviated_name
@@ -87,13 +96,13 @@ def get_perfect_synergies(units_on_board):
             origin2 = line[3]
             class1 = line[4]
             class2 = line[5]
-            origins  = set()
+            origins = set()
             origins.add((origin1))
             classes = set()
             classes.add((class1))
             if origin2 != "":
                 classes.add((origin2))
-            if class2!= "":
+            if class2 != "":
                 classes.add((class2))
 
             ALL_UNITS.append(Unit(name, abb, origins, classes, cost))
@@ -111,7 +120,9 @@ def get_perfect_synergies(units_on_board):
                 print("is perfect")
                 perfects.append(c)
     return perfects
+
+
 ps = get_perfect_synergies([])
 with open("psyns.pickle", "wb+") as psyns_file_handle:
     pickle.dump(ps, psyns_file_handle)
-#test_is_perfect_synergy()
+# test_is_perfect_synergy()
