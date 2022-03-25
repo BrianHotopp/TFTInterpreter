@@ -5,9 +5,12 @@ mouse==0.7.1
 numpy==1.22.3
 opencv_python==4.5.5.64
 pandas==1.4.1
-psutil==5.9.0
 PyAutoGUI==0.9.53
 torch==1.11.0
 torchvision==0.12.0
-psutil
+psutil~=5.9.0
+pywin32
 
+Pillow~=9.0.1
+textual~=0.1.17
+opencv-python~=4.5.5.64
