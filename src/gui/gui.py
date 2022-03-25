@@ -8,8 +8,11 @@ import threading
 import time
 import uuid
 # Local Imports
+import pyautogui
+from src.app.continuous_inference import Predictor
+from PIL import ImageGrab
 from buttons_clicked import Clicks
-
+import win32gui
 
 class TFT_GUI:
     """
@@ -30,18 +33,7 @@ class TFT_GUI:
             self: the current gui object
         """
         # get window handle and set League Client as foreground
-        self.window_name = "League of Legends (TM) Client"
-        """
-        hwnd = win32gui.FindWindow(None, self.window_name)
-        win32gui.ShowWindow(hwnd, 1)
-        win32gui.SetForegroundWindow(hwnd)
 
-        # get points and dimensions of window
-        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-        width = right - left
-        height = bottom - top
-
-        """
 
         self.master = tk.Tk()
         # change title
@@ -51,45 +43,41 @@ class TFT_GUI:
             self.master.iconbitmap("../favicon.ico")
         except:
             print("Couldn't load icon.")
-
+        self.window_name = "League of Legends (TM) Client"
         self.master.geometry(f"{500}x{200}")
-
+        self.getting_units = False
+        # this variable is mutated in the threads
+        self.board_state = dict()
+        # thread to get the board state
+        self.thd = None
         # create variables to check for widgets clicked
         self.c = Clicks()
-
-        # add buttons
-        # label2 = tk.Label(self.master, text="Label2").pack(side="left")
-        # tk.Button(self.master, text="Quit", command=self.do_nothing).pack(side="right")
-        # tk.Button(self.master, text="Hide", command=self.do_nothing).pack(side="right")
-
-        # add mouse clicks
+        # todo handle these paths less like an idiot
+        labels_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\gather_data\\resources\set6_classes.txt"
+        model_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\models\\10epoch.pth"
+        self.predictor = Predictor(labels_path, model_path)
         # create menu bar
         menubar = tk.Menu(self.master)
-
         # create file menu items
         filemenu = tk.Menu(menubar, tearoff=0, postcommand=self.file_menu)
         filemenu.add_command(label="Save")
         filemenu.add_command(label="Auto Save")
         filemenu.add_separator()
-
         # create sub menu for preferences
         submenu = tk.Menu(filemenu, tearoff=0)
         submenu.add_command(label="Settings")
         submenu.add_command(label="Keyboard Shortcuts")
         filemenu.add_cascade(label="Preferences", menu=submenu)
         filemenu.add_separator()
-
         filemenu.add_command(label="Hide Widgets Only")
         filemenu.add_command(label="Hide Window")
         filemenu.add_command(label="Exit", command=self.quit_program)
         menubar.add_cascade(label="File", menu=filemenu)
-
         # create show menu items
         runmenu = tk.Menu(menubar, tearoff=0)
         runmenu.add_command(label="Statistics")
         runmenu.add_command(label="Suggestions")
         menubar.add_cascade(label="Show", menu=runmenu)
-
         # create help menu items
         helpmenu = tk.Menu(menubar, tearoff=0, postcommand=self.help)
         helpmenu.add_command(label="Help Index", command=self.help_index)
@@ -97,34 +85,49 @@ class TFT_GUI:
         menubar.add_cascade(label="Help", menu=helpmenu)
         # configure the window
         self.master.config(menu=menubar)
-        """
-        do live inference on a second thread, code mostly from 
-        https://stackoverflow.com/questions/64287940/update-tkinter-gui-from-a-separate-thread-running-a-command
-        """
         self.units_on_board = tk.StringVar(self.master, "Units currently on the board")
-        self.lbl = tk.Label(self.master, text="Start")
+        self.lbl = tk.Label(self.master, textvar=self.units_on_board)
         self.lbl.pack(side="top")
-        thd = threading.Thread(target=self.timecnt)
-        thd.daemon = True
-        thd.start()
-        self.master.bind("<<event1>>", self.eventhandler)
+        self.master.after(100, self.update_board_state)
         self.master.mainloop()
-        # when the ui dies, wait for the async thread to finish
-        thd.join()
-
-    def timecnt(self):  # runs in background thread
-        print('Timer Thread', threading.get_ident())  # background thread id
-        for x in range(10):
-            self.master.event_generate("<<event1>>", when="tail", state=123)  # trigger event in main thread
-            self.units_on_board.set(' ' * 15 + str(x))  # update text entry from background thread
-            time.sleep(1)  # one second
-
-    def eventhandler(self, evt):  # runs in main thread
-        print('Event Thread', threading.get_ident())  # event thread id (same as main)
-        print(evt.state)  # 123, data from event
-        string = datetime.datetime.now().strftime('%I:%M:%S %p')
-        self.lbl.config(text=string)  # update widget
-        # txtvar.set(' '*15 + str(evt.state))  # update text entry in main thread
+        # RuntimeError after closing might be fixable
+        # it's happening because the thread for running continuous inference tries to mutate data from the GUI thread
+        # after the GUI thread dies
+        # https://stackoverflow.com/questions/62919494/main-thread-is-not-in-main-loop
+    def get_tft_window_loc(self):
+        """
+        gets the location of the tft window using win32
+        """
+        hwnd = win32gui.FindWindow(None, self.window_name)
+        # get points and dimensions of window
+        bbox = win32gui.GetWindowRect(hwnd)
+        return bbox
+    def get_tft_window_screenshot(self):
+        im = ImageGrab.grab(self.get_tft_window_loc())
+        return im
+    def get_units_thread(self):
+        # this can take a while to return
+        labels, scores = self.predictor.predict_on_image(self.get_tft_window_screenshot())
+        # spooky mutation of the parent thread's data
+        # only possible because when we call this function from another thread we get
+        # a reference to self, ie the parent thread's mutable data
+        r = "\n".join([f"{x[0]}:{x[1]}" for x in zip(labels, scores)])
+        self.units_on_board.set(r)
+    def update_board_state(self):
+        """
+        this function gets called repeatedly in the tkinter event loop
+        """
+        # the first time we update the board state the app has no secondary thread
+        print("updating boardstate")
+        if self.thd is None:
+            self.thd = threading.Thread(target=self.get_units_thread, daemon=True)
+            self.thd.start()
+        elif self.thd.is_alive():
+            print("thread doing its thing")
+        else:
+            self.thd = threading.Thread(target=self.get_units_thread, daemon=True)
+            self.thd.start()
+        self.master.after(100, self.update_board_state)
 
     def file_menu(self) -> None:
         """

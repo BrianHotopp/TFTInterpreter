@@ -14,16 +14,32 @@ import matplotlib.pyplot as plt
 
 
 class Predictor:
-    def __init__(self, model):
-        self._model = model
-
-    def from_file(self, path_to_model):
+    def __init__(self, labels_file_path, model_file_path):
         """
-        path_to_model: str path to the model to initialize the Predictor from
-        initializes a predictor object from a model saved to disk
+        labels_file_path: path to a labels file
+        model_path: path to a model file
         """
+        self._labels = self.get_labels(labels_file_path)
+        self._model = Model.load(model_file_path, list(self._labels.values()))
 
-    def predict_on_image(self, image_path, show_image_popup=False):
+    def get_labels(self, labels_file_name):
+        # read set 6 units in
+        SET_6_UNITS = dict()
+        with open(labels_file_name) as classes_file_handle:
+            for line in classes_file_handle.readlines():
+                unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
+                SET_6_UNITS[unit_name] = abbreviated_name
+        return SET_6_UNITS
+
+
+    def predict_on_image(self, image):
+        """
+        image: 1920x1080 RGB PIL image to predict on
+        """
+        img = np.array(image)
+        labels, boxes, scores = self._model.predict(img)
+        return labels, scores
+    def predict_on_image_file(self, image_path, show_image_popup=False):
         """
         Params:
         image_path: str path to the image to predict on
@@ -64,55 +80,3 @@ class Predictor:
         if show_image_popup:
             show_labeled_image(img, boxes, labels)
         return labels, boxes, scores
-
-
-def main():
-    arg_p = argparse.ArgumentParser()
-
-    arg_p.add_argument("-l", "--local_labels_dir",
-                       required=True,
-                       type=str,
-                       help="path to parent directory containing all the xml file labels")
-    arg_p.add_argument("-i", "--local_images_dir",
-                       required=True,
-                       type=str,
-                       help="path to parent directory containing all the images")
-    arg_p.add_argument("-s", "--set_file",
-                       required=True,
-                       type=str,
-                       help="csv file containing names and abbreviations for the units from the current set")
-
-    args = vars(arg_p.parse_args())
-    # read set 6 units in 
-    SET_6_UNITS = dict()
-    with open(args["set_file"]) as classes_file_handle:
-        for line in classes_file_handle.readlines():
-            unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
-            SET_6_UNITS[unit_name] = abbreviated_name
-
-    annotations_dir = args["local_labels_dir"]
-    images_dir = args["local_images_dir"]
-    dataset = Dataset(annotations_dir, images_dir)
-    loader = DataLoader(dataset, batch_size=2, shuffle=False)
-    labels = list(SET_6_UNITS.values())
-    load_model = True
-    if load_model:
-        model_load_path = "code/models/10epoch.pth"
-        # model_load_path =  "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
-        model = Model.load(model_load_path, labels)
-        p = Predictor(model)
-        # test_image_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw\\1.png"
-        test_image_path = "datadump/TFTInterpreterData/raw/1000.png"
-        p.predict_on_image(test_image_path)
-
-    else:
-        model_save_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\models\\10epoch.pth"
-        model = Model(labels)
-        model.fit(loader, dataset, verbose=True, epochs=10)
-        print("saving model")
-        model.save(model_save_path)
-
-
-if __name__ == "__main__":
-    # test_detecto_working()
-    main()
