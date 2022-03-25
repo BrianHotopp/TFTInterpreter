@@ -1,28 +1,39 @@
-import time
-import detecto
-import os
+#!python
+
+# Third Party Imports
 import torch
-import argparse
 from detecto import utils
 from detecto.visualize import show_labeled_image
-from detecto.core import Dataset, DataLoader, Model
-import matplotlib.pyplot as plt
+from detecto.core import Model
 import torchvision.ops.boxes as bops
-
 import numpy as np
 import matplotlib.pyplot as plt
-
+import PIL
 
 class Predictor:
-    def __init__(self, labels_file_path, model_file_path):
+    """
+    This class predicts the units on the image.
+    """
+    def __init__(self, labels_file_path: str, model_file_path: str) -> None:
         """
-        labels_file_path: path to a labels file
-        model_path: path to a model file
+        Initializae a predictor object.
+        Args:
+            self: the current Predictor object
+            labels_file_path: path to a labels file
+            model_path: path to a model file
         """
         self._labels = self.get_labels(labels_file_path)
         self._model = Model.load(model_file_path, list(self._labels.values()))
 
-    def get_labels(self, labels_file_name):
+    def get_labels(self, labels_file_name: str) -> dict():
+        """
+        Get the labels for the units.
+        Args:
+            self: the current Predictor object
+            labels_file_name: path to a labels file name
+        Returns:
+            dictionary of the set 6 units
+        """
         # read set 6 units in
         SET_6_UNITS = dict()
         with open(labels_file_name) as classes_file_handle:
@@ -31,21 +42,26 @@ class Predictor:
                 SET_6_UNITS[unit_name] = abbreviated_name
         return SET_6_UNITS
 
-
-    def predict_on_image(self, image):
+    def predict_on_image(self, image: PIL.Image.Image) -> tuple:
         """
-        image: 1920x1080 RGB PIL image to predict on
+        Predicts the units on the image.
+        Args:
+            image: 1920x1080 RGB PIL image to predict on
+        Returns:
+            labels of the units and the confidence score
         """
         img = np.array(image)
-        labels, boxes, scores = self._model.predict(img)
+        labels, _, scores = self._model.predict(img)
         return labels, scores
-    def predict_on_image_file(self, image_path, show_image_popup=False):
+
+    def predict_on_image_file(self, image_path: str, show_image_popup: bool=False) -> list:
         """
-        Params:
-        image_path: str path to the image to predict on
+        Predicts the units given a screenshot.
+        Args:
+            image_path: str path to the image to predict on
         Returns:
-        labels: list[str] representing the units on the board
-        makes a prediction of units on the board using a screenshot
+            labels: list[str] representing the units on the board
+                    makes a prediction of units on the board using a screenshot
         """
         img = utils.read_image(image_path)
         labels, boxes, scores = self._model.predict(img)

@@ -1,11 +1,19 @@
-from string import whitespace
-from tkinter import ALL
-from webbrowser import get
+#!python
+
+# Third Party Imports
+# from string import whitespace
+# from tkinter import ALL
+# from webbrowser import get
 import itertools
 
-
 class Unit():
-    def __init__(self, name, abb, origins, classes, cost) -> None:
+    """
+    A Unit object stores a TFT unit with attributes.
+    """
+    def __init__(self, name: str, abb: str, origins: set(), classes: set(), cost: str) -> None:
+        """
+        Initialize attributes of a Unit.
+        """
         self.name = name
         self.abb = abb
         self.origins = origins
@@ -13,8 +21,10 @@ class Unit():
         self.cost = cost
 
     def __str__(self) -> str:
+        """
+        toString function.
+        """
         return f"{self.name} {self.abb} {self.origins} {self.classes} {self.cost}"
-
 
 def consume(origins_classes_list, curr_origin_class, splits):
     num_origin_class = origins_classes_list.count(curr_origin_class)
@@ -23,7 +33,6 @@ def consume(origins_classes_list, curr_origin_class, splits):
             for i in range(num_origin_class):
                 origins_classes_list.remove(curr_origin_class)
             break
-
 
 def is_perfect_synergy(units):
     all_stuff = []
