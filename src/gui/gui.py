@@ -72,18 +72,18 @@ class TFT_GUI:
         # create sub menu for preferences
         submenu = tk.Menu(filemenu, tearoff=0)
         submenu.add_command(label="Settings")
-        submenu.add_command(label="Keyboard Shortcuts")
+        submenu.add_command(label="Keyboard Shortcuts", command=self.shortcuts)
         filemenu.add_cascade(label="Preferences", menu=submenu)
         filemenu.add_separator()
-        filemenu.add_command(label="Hide Widgets Only")
-        filemenu.add_command(label="Hide Window")
+
+        filemenu.add_command(label="Hide Window", command=self.hide_window)
         filemenu.add_command(label="Exit", command=self.quit_program)
         menubar.add_cascade(label="File", menu=filemenu)
 
         # create show menu items
         runmenu = tk.Menu(menubar, tearoff=0)
         runmenu.add_command(label="Statistics")
-        runmenu.add_command(label="Suggestions")
+        runmenu.add_command(label="Suggestions", command=self.show_analytics)
         menubar.add_cascade(label="Show", menu=runmenu)
 
         # create help menu items
@@ -219,6 +219,40 @@ class TFT_GUI:
             self.master.wm_deiconify()
             self.master.lift()
             self.master.attributes("-topmost", True)
+
+    def shortcuts(self) -> None:
+        """
+        Shows all the keyboard shortcuts.
+        Args:
+            self: the current gui object
+        """
+        tk.Label(self.master, text="Keyboard Shortcuts").pack()
+
+    def show_analytics(self) -> None:
+        """
+        Show the units suggested to buy.
+        Args:
+            self: the current gui object
+        """
+        # these are the units currently on the board:
+            # unit1,
+            # unit2,
+            # unit3
+        # these are the units you should buy:
+            # unit1,
+            # unit2,
+            # unit3
+        tk.Label(self.master, text="These are the units currently on the board:").pack()
+        tk.Label(self.master, text="These are the units you should buy:").pack()
+
+    def hide_window(self) -> None:
+        """
+        The command for hiding the window.
+        Args:
+            self: the current gui object
+        """
+        if self.master.winfo_viewable():
+            self.master.withdraw()
 
     def quit_program(self) -> None:
         """
