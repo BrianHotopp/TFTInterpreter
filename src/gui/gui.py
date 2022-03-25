@@ -1,18 +1,14 @@
 #!python
+
 # Third Party Imports
-import datetime
 import tkinter as tk
-import mouse
 import keyboard
 import threading
-import time
-import uuid
+import PIL
+from win32 import win32gui
+
 # Local Imports
-import pyautogui
 from src.app.continuous_inference import Predictor
-from PIL import ImageGrab
-from buttons_clicked import Clicks
-import win32gui
 
 class TFT_GUI:
     """
@@ -32,37 +28,47 @@ class TFT_GUI:
         Args:
             self: the current gui object
         """
-        # get window handle and set League Client as foreground
-
-
         self.master = tk.Tk()
-        # change title
         self.master.title("The Interpreter")
-        # set icon for master window
+
+        # set icon
         try:
-            self.master.iconbitmap("../favicon.ico")
+            self.master.iconbitmap("favicon.ico")
         except:
             print("Couldn't load icon.")
+
         self.window_name = "League of Legends (TM) Client"
-        self.master.geometry(f"{500}x{200}")
+
+        left, top, right, bottom = self.get_tft_window_loc()
+        width = right - left
+        height = bottom - top
+        self.master.geometry(f"{width}x{height}")
         self.getting_units = False
+
         # this variable is mutated in the threads
         self.board_state = dict()
+
         # thread to get the board state
         self.thd = None
-        # create variables to check for widgets clicked
-        self.c = Clicks()
+
         # todo handle these paths less like an idiot
         labels_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\gather_data\\resources\set6_classes.txt"
         model_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\models\\10epoch.pth"
         self.predictor = Predictor(labels_path, model_path)
+
+        # keybinds
+        keyboard.add_hotkey("ctrl+q", lambda: self.quit_program)
+        keyboard.add_hotkey("alt+`", lambda: self.show_hide)
+
         # create menu bar
         menubar = tk.Menu(self.master)
+
         # create file menu items
         filemenu = tk.Menu(menubar, tearoff=0, postcommand=self.file_menu)
         filemenu.add_command(label="Save")
         filemenu.add_command(label="Auto Save")
         filemenu.add_separator()
+
         # create sub menu for preferences
         submenu = tk.Menu(filemenu, tearoff=0)
         submenu.add_command(label="Settings")
@@ -73,16 +79,19 @@ class TFT_GUI:
         filemenu.add_command(label="Hide Window")
         filemenu.add_command(label="Exit", command=self.quit_program)
         menubar.add_cascade(label="File", menu=filemenu)
+
         # create show menu items
         runmenu = tk.Menu(menubar, tearoff=0)
         runmenu.add_command(label="Statistics")
         runmenu.add_command(label="Suggestions")
         menubar.add_cascade(label="Show", menu=runmenu)
+
         # create help menu items
-        helpmenu = tk.Menu(menubar, tearoff=0, postcommand=self.help)
+        helpmenu = tk.Menu(menubar, tearoff=0)
         helpmenu.add_command(label="Help Index", command=self.help_index)
         helpmenu.add_command(label="About", command=self.about)
         menubar.add_cascade(label="Help", menu=helpmenu)
+
         # configure the window
         self.master.config(menu=menubar)
         self.units_on_board = tk.StringVar(self.master, "Units currently on the board")
@@ -90,22 +99,42 @@ class TFT_GUI:
         self.lbl.pack(side="top")
         self.master.after(100, self.update_board_state)
         self.master.mainloop()
+
         # RuntimeError after closing might be fixable
         # it's happening because the thread for running continuous inference tries to mutate data from the GUI thread
         # after the GUI thread dies
         # https://stackoverflow.com/questions/62919494/main-thread-is-not-in-main-loop
-    def get_tft_window_loc(self):
+
+    def get_tft_window_loc(self) -> tuple:
         """
-        gets the location of the tft window using win32
+        Get the location of the TFT window.
+        Args:
+            self: the current gui object
+        Returns:
+            window rectangle in terms of left, top, right, bottom
         """
         hwnd = win32gui.FindWindow(None, self.window_name)
         # get points and dimensions of window
         bbox = win32gui.GetWindowRect(hwnd)
         return bbox
-    def get_tft_window_screenshot(self):
-        im = ImageGrab.grab(self.get_tft_window_loc())
+
+    def get_tft_window_screenshot(self) -> PIL.Image.Image:
+        """
+        Get the screenshot of the TFT window.
+        Args:
+            self: the current gui object
+        Returns:
+            image object
+        """
+        im = PIL.ImageGrab.grab(self.get_tft_window_loc())
         return im
-    def get_units_thread(self):
+
+    def get_units_thread(self) -> None:
+        """
+        Gets the units on the board.
+        Args:
+            self: the current gui object
+        """
         # this can take a while to return
         labels, scores = self.predictor.predict_on_image(self.get_tft_window_screenshot())
         # spooky mutation of the parent thread's data
@@ -113,9 +142,12 @@ class TFT_GUI:
         # a reference to self, ie the parent thread's mutable data
         r = "\n".join([f"{x[0]}:{x[1]}" for x in zip(labels, scores)])
         self.units_on_board.set(r)
-    def update_board_state(self):
+
+    def update_board_state(self) -> None:
         """
-        this function gets called repeatedly in the tkinter event loop
+        Updates the board state continuously.
+        Args:
+            self: the current gui object
         """
         # the first time we update the board state the app has no secondary thread
         print("updating boardstate")
@@ -129,32 +161,13 @@ class TFT_GUI:
             self.thd.start()
         self.master.after(100, self.update_board_state)
 
-    def file_menu(self) -> None:
-        """
-        Account for the file menu being clicked.
-        Args:
-            self: the current gui object
-        """
-        self.c.file = True
-        self.master.after(100, self.file_menu)
-
-    def help(self) -> None:
-        """
-        Account for the help menu being clicked.
-        Args:
-            self: the current gui object
-        """
-        self.c.help = True
-        self.master.after(100, self.help)
-
     def help_index(self) -> None:
         """
-        Account for the help index button being clicked.
+        Show help index.
         Args:
             self: the current gui object
         """
-        self.c.help_index = True
-        self.master.after(100, self.help_index)
+        return None
 
     def about(self) -> None:
         """
@@ -162,17 +175,28 @@ class TFT_GUI:
         Args:
             self: the current gui object
         """
-        self.c.about = True
         top = tk.Toplevel(self.master)
-        top.geometry(f"{400}x{200}")
+        
+        # get window size and position
+        window_width = self.master.winfo_width()
+        window_height = self.master.winfo_height()
+        x = self.master.winfo_x()
+        y = self.master.winfo_y()
+
+        # size to half the current window, position in the middle of the screen
+        new_width = window_width // 2
+        new_height = window_height // 2
+        top.geometry(f"{new_width}x{new_height}+{x + new_width//2}+{y + new_height//2}")
+
         top.title("About")
         # add about text
         about_text = """We are a group of students at RPI who originally 
             designed this for a class.\n The goal of the TFT Interpreter was
             to create a product similar to other overlays that currently 
-            exist without the extensive and heavy installations"""
+            exist without the extensive and heavy installations."""
         tk.Label(top, text="About Us").pack()
         tk.Label(top, text=about_text).pack()
+        tk.Button(top, text="Close", command=lambda: self.hide_about(top)).pack()
 
     def hide_about(self, top: tk.Toplevel) -> None:
         """
@@ -181,8 +205,20 @@ class TFT_GUI:
             self: the current gui object
             top: the top window created (for about)
         """
-        self.c.close_about = True
         top.destroy()
+
+    def show_hide(self) -> None:
+        """
+        The command for showing and hiding the whole GUI.
+        Args:
+            self: the current gui object
+        """
+        if self.master.winfo_viewable():
+            self.master.withdraw()
+        else:
+            self.master.wm_deiconify()
+            self.master.lift()
+            self.master.attributes("-topmost", True)
 
     def quit_program(self) -> None:
         """
@@ -190,5 +226,4 @@ class TFT_GUI:
         Args:
             self: the current gui object
         """
-        self.c.quit = True
         self.master.quit()
