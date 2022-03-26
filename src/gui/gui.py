@@ -63,10 +63,11 @@ class TFT_GUI:
         # create menu bar
         menubar = tk.Menu(self.master)
 
+        self.image_index = 1
+
         # create file menu items
-        filemenu = tk.Menu(menubar, tearoff=0, postcommand=self.file_menu)
-        filemenu.add_command(label="Save")
-        filemenu.add_command(label="Auto Save")
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Save", command=self.save_image)
         filemenu.add_separator()
 
         # create sub menu for preferences
@@ -128,6 +129,17 @@ class TFT_GUI:
         """
         im = PIL.ImageGrab.grab(self.get_tft_window_loc())
         return im
+
+    def save_image(self) -> None:
+        """
+        Save the screenshot.
+        Args:
+            self: the current gui object
+        """
+        im = self.get_tft_window_screenshot()
+        filename = f"tft_screenshot{self.image_index}"
+        im = im.save(filename)
+        image_index += 1
 
     def get_units_thread(self) -> None:
         """
