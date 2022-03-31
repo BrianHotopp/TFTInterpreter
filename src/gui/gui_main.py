@@ -3,7 +3,7 @@
 import psutil
 
 # Local Imports
-from gui import TFT_GUI
+from src.gui.gui import TFT_GUI
 
 # download requirements for a specific folder
 # pipreqs path/to/project
