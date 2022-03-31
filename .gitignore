@@ -20,3 +20,4 @@ build/gui_main/warn-gui_main.txt
 build/gui_main/xref-gui_main.html
 dist/gui_main.exe
 gui_main.spec
+baseenv
