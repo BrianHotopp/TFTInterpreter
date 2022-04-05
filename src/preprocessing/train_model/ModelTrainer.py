@@ -16,18 +16,18 @@ class ModelTrainer:
     """
     class to hold information for model training
     """
-    def __init__(self, classes_file_path, labels_file_path, images_file_path, verbose=False, batch_size=2, shuffle=False, epochs=10) -> None:
+    def __init__(self, classes_file_path, annotation_dir, images_dir, verbose=False, batch_size=2, shuffle=False, epochs=10) -> None:
         self.classes = self.get_classes(classes_file_path)
-        self.labels_file_path = str(labels_file_path)
-        self.images_file_path = str(images_file_path)
+        self.annotations_dir = str(annotation_dir)
+        self.images_dir = str(images_dir)
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.epochs = epochs
         self.verbose = verbose
-        self.labels = self.get_labels(labels_file_path)
         self.model = None
 
-    def get_classes(self, classes_file_path):
+    @staticmethod
+    def get_classes(classes_file_path):
         """
         classes_file_path: path to a classes file
         """
@@ -37,15 +37,19 @@ class ModelTrainer:
                 line = line.strip()
                 if line:
                     line = line.split(',')
-                    classes[line[0]] = line[1]
+                    classes[line[0].strip()] = line[1].strip()
         return classes
     def train(self):
         dataset = Dataset(self.annotations_dir, self.images_dir)
-        loader = DataLoader(dataset, self.batch_size, self.shuffle)
-        self.model = Model(self.labels)
+        loader = DataLoader(dataset, batch_size = self.batch_size, shuffle = self.shuffle)
+        self.model = Model(list(self.classes.values()))
         self.model.fit(loader, dataset, self.verbose, self.epochs)
-    def save_model(self):
-        self.model.save(self.model_file_path)
+    def save_model(self, save_path):
+        """
+        save model to disk
+        save_path: python pathlib object to save model to
+        """
+        self.model.save(str(save_path))
 
 def main():
     arg_p = argparse.ArgumentParser()
