@@ -14,6 +14,7 @@ from PIL import ImageGrab
 from buttons_clicked import Clicks
 import win32gui
 
+
 class TFT_GUI:
     """
     so I think there are 2 functions you can assume we will have implemented for you
@@ -33,7 +34,6 @@ class TFT_GUI:
             self: the current gui object
         """
         # get window handle and set League Client as foreground
-
 
         self.master = tk.Tk()
         # change title
@@ -85,7 +85,7 @@ class TFT_GUI:
         menubar.add_cascade(label="Help", menu=helpmenu)
         # configure the window
         self.master.config(menu=menubar)
-        self.units_on_board = tk.StringVar(self.master, "Units currently on the board")
+        self.units_on_board = tk.StringVar(self.master, "No units currently detected on the board")
         self.lbl = tk.Label(self.master, textvar=self.units_on_board)
         self.lbl.pack(side="top")
         self.master.after(100, self.update_board_state)
@@ -94,6 +94,7 @@ class TFT_GUI:
         # it's happening because the thread for running continuous inference tries to mutate data from the GUI thread
         # after the GUI thread dies
         # https://stackoverflow.com/questions/62919494/main-thread-is-not-in-main-loop
+
     def get_tft_window_loc(self):
         """
         gets the location of the tft window using win32
@@ -102,29 +103,38 @@ class TFT_GUI:
         # get points and dimensions of window
         bbox = win32gui.GetWindowRect(hwnd)
         return bbox
+
     def get_tft_window_screenshot(self):
         im = ImageGrab.grab(self.get_tft_window_loc())
         return im
+
     def get_units_thread(self):
         # this can take a while to return
-        labels, scores = self.predictor.predict_on_image(self.get_tft_window_screenshot())
-        # spooky mutation of the parent thread's data
-        # only possible because when we call this function from another thread we get
-        # a reference to self, ie the parent thread's mutable data
-        r = "\n".join([f"{x[0]}:{x[1]}" for x in zip(labels, scores)])
-        self.units_on_board.set(r)
+        ss = self.get_tft_window_screenshot()
+        in_planning_phase = self.predictor.in_planning_phase(ss)
+        if in_planning_phase:
+            labels, scores = self.predictor.predict_on_image(ss)
+            # spooky mutation of the parent thread's data
+            # only possible because when we call this function from another thread we get
+            # a reference to self, ie the parent thread's mutable data
+            results = [f"{x[0]}:{x[1]:.2f}" for x in zip(labels, scores)]
+            r = "\n".join(results[:min(len(results), 10)])
+            self.units_on_board.set(r)
+            return
+        else:
+            r = "Not currently in the planning phase"
+            self.units_on_board.set(r)
+            return
+
     def update_board_state(self):
         """
         this function gets called repeatedly in the tkinter event loop
         """
         # the first time we update the board state the app has no secondary thread
-        print("updating boardstate")
         if self.thd is None:
             self.thd = threading.Thread(target=self.get_units_thread, daemon=True)
             self.thd.start()
-        elif self.thd.is_alive():
-            print("thread doing its thing")
-        else:
+        elif not self.thd.is_alive():
             self.thd = threading.Thread(target=self.get_units_thread, daemon=True)
             self.thd.start()
         self.master.after(100, self.update_board_state)
