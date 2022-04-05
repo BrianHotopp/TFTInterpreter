@@ -15,6 +15,18 @@ class Predictor:
     """
     This class predicts the units on the image.
     """
+    # load static resources from disk on initialization
+    carousel_image_path = "../gather_data/resources/augmentbutton.PNG"
+    gray_helmet_path = "../gather_data/resources/helmet.PNG"
+    blue_helmet_path = "../gather_data/resources/helmetblue.PNG"
+    augment_button_path = "../gather_data/resources/augmentbutton.PNG"
+    enemy_bench_empty_path = "../gather_data/resources/emptybench.PNG"
+    carousel_image = cv2.imread(carousel_image_path)
+    gray_helmet_image = cv2.imread(gray_helmet_path)
+    blue_helmet_image = cv2.imread(blue_helmet_path)
+    augment_button_image = cv2.imread(augment_button_path)
+    enemy_bench_empty_image = cv2.imread(enemy_bench_empty_path)
+
     def __init__(self, labels_file_path: str, model_file_path: str) -> None:
         """
         Initializae a predictor object.
@@ -25,58 +37,6 @@ class Predictor:
         """
         self._labels = self.get_labels(labels_file_path)
         self._model = Model.load(model_file_path, list(self._labels.values()))
-        # load static resources from disk on initialization
-        carousel_image_path = "../gather_data/resources/augmentbutton.PNG"
-        gray_helmet_path = "../gather_data/resources/helmet.PNG"
-        blue_helmet_path = "../gather_data/resources/helmetblue.PNG"
-        augment_button_path = "../gather_data/resources/augmentbutton.PNG"
-        enemy_bench_empty_path = "../gather_data/resources/emptybench.PNG"
-        self.carousel_image = cv2.imread(carousel_image_path)
-        self.gray_helmet_image = cv2.imread(gray_helmet_path)
-        self.blue_helmet_image = cv2.imread(blue_helmet_path)
-        self.augment_button_image = cv2.imread(augment_button_path)
-        self.enemy_bench_empty_image = cv2.imread(enemy_bench_empty_path)
-
-    def PILtoCV2(self, img):
-        """
-        converts an image in PIL form to cv2
-        """
-        npimg = np.array(img)
-        # Convert RGB to BGR
-        open_cv_image = npimg[:, :, ::-1].copy()
-        return open_cv_image
-    def image_in_image(self, image1, image2, threshold = 0.8):
-        """
-        image1: image in cv2
-        image2: image in cv2
-        returns true if image1 is in image2
-        """
-        res = cv2.matchTemplate(image1, image2, cv2.TM_CCOEFF_NORMED)
-        flag = False
-        if np.amax(res) > threshold:
-            flag = True
-        return flag
-
-    def in_planning_phase(self, screenshot):
-        """
-        image: PIL Screenshot
-        """
-        screenshot = self.PILtoCV2(screenshot)
-        in_carousel = self.image_in_image(self.carousel_image, screenshot)
-        gray_helmet = self.image_in_image(self.gray_helmet_image, screenshot, threshold=0.4)
-        blue_helmet = self.image_in_image(self.blue_helmet_image, screenshot, threshold=0.5)
-        augment_button = self.image_in_image(self.augment_button_image, screenshot)
-        enemy_bench_empty = self.image_in_image(self.enemy_bench_empty_image, screenshot)
-        """
-        print(f"carou{in_carousel}")
-        print(f"gh{gray_helmet}")
-        print(f"bh{blue_helmet}")
-        print(f"ab{augment_button}")
-        print(f"enemb{enemy_bench_empty}")
-        print(f"am in planning{planning}")
-        """
-        planning = (blue_helmet or gray_helmet) and (not in_carousel) and (not augment_button) and (enemy_bench_empty)
-        return planning
     def get_labels(self, labels_file_name):
         # read set 6 units in
         SET_6_UNITS = dict()
@@ -138,3 +98,47 @@ class Predictor:
         if show_image_popup:
             show_labeled_image(img, boxes, labels)
         return labels, boxes, scores
+    @classmethod
+    def PILtoCV2(img):
+        """
+        converts an image in PIL form to cv2
+        """
+        npimg = np.array(img)
+        # Convert RGB to BGR
+        open_cv_image = npimg[:, :, ::-1].copy()
+        return open_cv_image
+    @classmethod
+    def image_in_image(self, image1, image2, threshold = 0.8):
+        """
+        image1: image in cv2
+        image2: image in cv2
+        returns true if image1 is in image2
+        """
+        res = cv2.matchTemplate(image1, image2, cv2.TM_CCOEFF_NORMED)
+        flag = False
+        if np.amax(res) > threshold:
+            flag = True
+        return flag
+
+    @classmethod
+    def in_planning_phase(screenshot):
+        """
+        image: PIL Screenshot
+        """
+        screenshot = Predictor.PILtoCV2(screenshot)
+        in_carousel = Predictor.image_in_image(Predictor.carousel_image, screenshot)
+        gray_helmet = Predictor.image_in_image(Predictor.gray_helmet_image, screenshot, threshold=0.4)
+        blue_helmet = Predictor.image_in_image(Predictor.blue_helmet_image, screenshot, threshold=0.5)
+        augment_button = Predictor.image_in_image(Predictor.augment_button_image, screenshot)
+        enemy_bench_empty = Predictor.image_in_image(Predictor.enemy_bench_empty_image, screenshot)
+        """
+        print(f"carou{in_carousel}")
+        print(f"gh{gray_helmet}")
+        print(f"bh{blue_helmet}")
+        print(f"ab{augment_button}")
+        print(f"enemb{enemy_bench_empty}")
+        print(f"am in planning{planning}")
+        """
+        planning = (blue_helmet or gray_helmet) and (not in_carousel) and (not augment_button) and (enemy_bench_empty)
+        return planning
+
