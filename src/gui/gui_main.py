@@ -3,7 +3,7 @@
 import psutil
 
 # Local Imports
-from gui import TFT_GUI
+from src.gui.gui import TFT_GUI
 
 # download requirements for a specific folder
 # pipreqs path/to/project
@@ -11,10 +11,6 @@ from gui import TFT_GUI
 
 # needed to install from the download (python 3.9, x64)
 # https://github.com/mhammond/pywin32/releases
-
-# pip install psutil
-# pip install keyboard
-# pip install mouse
 
 # pyinstaller --onefile C:\Users\gwyne\Documents\GitHub\TFTInterpreter\gui\gui_main.py -w
 

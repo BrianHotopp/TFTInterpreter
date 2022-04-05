@@ -2,10 +2,9 @@
 models
 env
 venv
+baseenv
 data
 __pycache__
 build
 dist
 gui_main.spec
-
-

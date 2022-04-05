@@ -3,22 +3,25 @@ import detecto
 import cv2
 import os
 import torch
-import argparse
 from detecto import utils
 from detecto.visualize import show_labeled_image
-from detecto.core import Dataset, DataLoader, Model
-import matplotlib.pyplot as plt
+from detecto.core import Model
 import torchvision.ops.boxes as bops
-
 import numpy as np
 import matplotlib.pyplot as plt
-
+import PIL
 
 class Predictor:
-    def __init__(self, labels_file_path, model_file_path):
+    """
+    This class predicts the units on the image.
+    """
+    def __init__(self, labels_file_path: str, model_file_path: str) -> None:
         """
-        labels_file_path: path to a labels file
-        model_path: path to a model file
+        Initializae a predictor object.
+        Args:
+            self: the current Predictor object
+            labels_file_path: path to a labels file
+            model_path: path to a model file
         """
         self._labels = self.get_labels(labels_file_path)
         self._model = Model.load(model_file_path, list(self._labels.values()))
@@ -120,6 +123,7 @@ class Predictor:
         img = np.array(image)
         labels, boxes, scores = self.reduce_prediction(*self._model.predict(img))
         return labels, scores
+
     def predict_on_image_file(self, image_path, show_image_popup=False):
         """
         Params:

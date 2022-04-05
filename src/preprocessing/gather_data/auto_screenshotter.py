@@ -1,16 +1,27 @@
+#!python
+
+# System Imports
 import os
-import pyautogui
-import numpy
-import uuid
-import cv2
 import time
 
+# Third Party Imports
+import pyautogui
+import PIL
+# import numpy
+# import uuid
+# import cv2
+
+# Global Variables
 TOP_BAR_THICKNESS = 58
 RES = [1920, 1080]
 RAW_SCREENSHOT_DIR = "E:\Dropbox\Spring 2022\Software Design and Documentation\datadump\TFTInterpreterData\\raw"
 
-
-def get_top_numbers():
+def get_top_numbers() -> PIL.Image.Image:
+    """
+    Gets the screenshot
+    Returns:
+        image object
+    """
     left_offset = 755
     width_of_numbers = 55
     height_of_numbers = 38
@@ -22,7 +33,6 @@ def get_top_numbers():
             height_of_numbers
         ))
     return im2
-
 
 if __name__ == "__main__":
     # full screen
