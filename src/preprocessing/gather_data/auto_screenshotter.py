@@ -3,10 +3,11 @@
 # System Imports
 import os
 import time
-
+from pathlib import Path
 # Third Party Imports
 import pyautogui
 import PIL
+from src.app.continuous_inference import Predictor
 # import numpy
 # import uuid
 # import cv2
@@ -40,23 +41,12 @@ if __name__ == "__main__":
     helmet_confidence = 0.6
     next = 1 + max([int(x.split(".")[0]) for x in list(os.listdir(RAW_SCREENSHOT_DIR))])
     while True:
-        in_carousel = pyautogui.locateOnScreen('resources/carousel.PNG', confidence=0.9,
-                                               region=(0, TOP_BAR_THICKNESS, RES[0], RES[1])) is not None
-        gray_helmet = pyautogui.locateOnScreen('resources/helmet.PNG', confidence=helmet_confidence,
-                                               region=(0, TOP_BAR_THICKNESS, RES[0], RES[1])) is not None
-        blue_helmet = pyautogui.locateOnScreen('resources/helmetblue.PNG', confidence=helmet_confidence,
-                                               region=(0, TOP_BAR_THICKNESS, RES[0], RES[1])) is not None
-        augment_button = pyautogui.locateOnScreen('resources/augmentbutton.PNG', confidence=0.9,
-                                                  region=(0, TOP_BAR_THICKNESS, RES[0], RES[1])) is not None
-        enemy_bench_empty = pyautogui.locateOnScreen('resources/emptybench.PNG', confidence=0.8,
-                                                     region=(0, TOP_BAR_THICKNESS, RES[0], RES[1])) is not None
-        planning = blue_helmet or gray_helmet and not in_carousel and not augment_button and enemy_bench_empty
-        print(
-            f"bluehelm {blue_helmet} grayhelm {gray_helmet} incarousel {in_carousel} augment_button {augment_button}"
-            f" enemybenchempty {enemy_bench_empty}")
+        im = pyautogui.screenshot(filename, region=(0, TOP_BAR_THICKNESS, RES[0], RES[1]))
+        planning = Predictor.in_planning_phase(im)
         if planning:
-            print("in planning phase")
-            filename = f"{RAW_SCREENSHOT_DIR}\\{next}.png"
-            im = pyautogui.screenshot(filename, region=(0, TOP_BAR_THICKNESS, RES[0], RES[1]))
+            print("In planning phase, taking screenshot.")
+            filename = Path(f"{RAW_SCREENSHOT_DIR}\\{next}.png")
+            im.save(filename)
+            print(f"Saved screenshot to {filename}")
             next += 1
-            time.sleep(1)
+        time.sleep(1)
