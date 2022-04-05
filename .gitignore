@@ -1,5 +1,5 @@
 /gather_data/data
-models
+models/
 env
 venv
 baseenv
