@@ -10,7 +10,6 @@ from win32 import win32gui
 # Local Imports
 from src.app.continuous_inference import Predictor
 
-
 class TFT_GUI:
     """
     so I think there are 2 functions you can assume we will have implemented for you
@@ -29,11 +28,7 @@ class TFT_GUI:
         Args:
             self: the current gui object
         """
-<<<<<<< HEAD
         # get window handle and set League Client as foreground
-
-=======
->>>>>>> 7db9fc7ce0dee095be91b4699aca37fdb540d2ad
         self.master = tk.Tk()
         self.master.title("The Interpreter")
 
@@ -112,11 +107,7 @@ class TFT_GUI:
         # after the GUI thread dies
         # https://stackoverflow.com/questions/62919494/main-thread-is-not-in-main-loop
 
-<<<<<<< HEAD
-    def get_tft_window_loc(self):
-=======
     def get_tft_window_loc(self) -> tuple:
->>>>>>> 7db9fc7ce0dee095be91b4699aca37fdb540d2ad
         """
         Get the location of the TFT window.
         Args:
@@ -129,31 +120,6 @@ class TFT_GUI:
         bbox = win32gui.GetWindowRect(hwnd)
         return bbox
 
-<<<<<<< HEAD
-    def get_tft_window_screenshot(self):
-        im = ImageGrab.grab(self.get_tft_window_loc())
-        return im
-
-    def get_units_thread(self):
-        # this can take a while to return
-        ss = self.get_tft_window_screenshot()
-        in_planning_phase = self.predictor.in_planning_phase(ss)
-        if in_planning_phase:
-            labels, scores = self.predictor.predict_on_image(ss)
-            # spooky mutation of the parent thread's data
-            # only possible because when we call this function from another thread we get
-            # a reference to self, ie the parent thread's mutable data
-            results = [f"{x[0]}:{x[1]:.2f}" for x in zip(labels, scores)]
-            r = "\n".join(results[:min(len(results), 10)])
-            self.units_on_board.set(r)
-            return
-        else:
-            r = "Not currently in the planning phase"
-            self.units_on_board.set(r)
-            return
-
-    def update_board_state(self):
-=======
     def get_tft_window_screenshot(self) -> PIL.Image.Image:
         """
         Get the screenshot of the TFT window.
@@ -191,7 +157,6 @@ class TFT_GUI:
         self.units_on_board.set(r)
 
     def update_board_state(self) -> None:
->>>>>>> 7db9fc7ce0dee095be91b4699aca37fdb540d2ad
         """
         Updates the board state continuously.
         Args:

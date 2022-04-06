@@ -27,6 +27,13 @@ class Unit():
         return f"{self.name} {self.abb} {self.origins} {self.classes} {self.cost}"
 
 def consume(origins_classes_list, curr_origin_class, splits):
+    """
+    Parse the origin classes list.
+    Args:
+        origins_classes_list: list of origin classes
+        curr_origin_class: current origin class
+        splits: 
+    """
     num_origin_class = origins_classes_list.count(curr_origin_class)
     for split in splits:
         if num_origin_class >= split:
@@ -35,6 +42,8 @@ def consume(origins_classes_list, curr_origin_class, splits):
             break
 
 def is_perfect_synergy(units):
+    """
+    """
     all_stuff = []
     for unit in units:
         all_stuff.extend(list(unit.origins))

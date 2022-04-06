@@ -37,7 +37,16 @@ class Predictor:
         """
         self._labels = self.get_labels(labels_file_path)
         self._model = Model.load(model_file_path, list(self._labels.values()))
-    def get_labels(self, labels_file_name):
+
+    def get_labels(self, labels_file_name) -> dict:
+        """
+        Get the labels of the set 6 units.
+        Args:
+            self: the current Predictor object
+            labels_file_name: the filename to read from
+        Returns:
+            dictionary of set 6 units parsed
+        """
         # read set 6 units in
         SET_6_UNITS = dict()
         with open(labels_file_name) as classes_file_handle:
@@ -47,6 +56,19 @@ class Predictor:
         return SET_6_UNITS
 
     def reduce_prediction(self, labels, boxes, scores):
+        """
+        Reduce the prediction.
+        Args:
+            self: the current Predictor object
+            labels: labels of units on the board
+            boxes: the box locations on the image
+            scores: the confidence score
+        Returns:
+            labels: list[str] representing the units on the board
+                    makes a prediction of units on the board using a screenshot
+            boxes: the box locations on the image
+            scores: the confidence score
+        """
         all_preds = filter(lambda x: x[2] > 0.2, zip(labels, boxes, scores))
         best = []
         thresh = 0.1
@@ -78,19 +100,31 @@ class Predictor:
 
     def predict_on_image(self, image):
         """
-        image: 1920x1080 RGB PIL image to predict on
+        Predict unit(s) given image object.
+        Args:
+            self: the current Predictor object
+            image: 1920x1080 RGB PIL image to predict on
+        Returns:
+            labels: list[str] representing the units on the board
+                    makes a prediction of units on the board using a screenshot
+            scores: the confidence score
         """
         img = np.array(image)
-        labels, boxes, scores = self.reduce_prediction(*self._model.predict(img))
+        labels, _, scores = self.reduce_prediction(*self._model.predict(img))
         return labels, scores
 
     def predict_on_image_file(self, image_path, show_image_popup=False):
         """
-        Params:
-        image_path: str path to the image to predict on
+        Predict unit(s) given an image file.
+        Args:
+            self: the current Predictor object
+            image_path: str path to the image to predict on
+            show_image_popup: boolean for whether or not to pop out the image
         Returns:
-        labels: list[str] representing the units on the board
-        makes a prediction of units on the board using a screenshot
+            labels: list[str] representing the units on the board
+                    makes a prediction of units on the board using a screenshot
+            boxes: the box locations on the image
+            scores: the confidence score
         """
         img = utils.read_image(image_path)
         labels, boxes, scores = self._model.predict(img)
@@ -98,21 +132,32 @@ class Predictor:
         if show_image_popup:
             show_labeled_image(img, boxes, labels)
         return labels, boxes, scores
+
     @classmethod
     def PILtoCV2(img):
         """
-        converts an image in PIL form to cv2
+        Convert an image in PIL form to cv2.
+        Args:
+            img: image object
+        Returns:
+            open_cv_image converted
         """
         npimg = np.array(img)
         # Convert RGB to BGR
         open_cv_image = npimg[:, :, ::-1].copy()
         return open_cv_image
+
     @classmethod
     def image_in_image(self, image1, image2, threshold = 0.8):
         """
-        image1: image in cv2
-        image2: image in cv2
-        returns true if image1 is in image2
+        Determine if an image is in another image.
+        Args:
+            self: the current Predictor object
+            image1: image in cv2
+            image2: image in cv2
+            threshold: threshold for finding an image
+        Returns:
+            boolean: true if image1 is in image2
         """
         res = cv2.matchTemplate(image1, image2, cv2.TM_CCOEFF_NORMED)
         flag = False
@@ -123,7 +168,11 @@ class Predictor:
     @classmethod
     def in_planning_phase(screenshot):
         """
-        image: PIL Screenshot
+        Determine whether the player is in the planning phase.
+        Args:
+            screenshot: PIL Image
+        Returns:
+            boolean: whether or not the user is in the planning phase
         """
         screenshot = Predictor.PILtoCV2(screenshot)
         in_carousel = Predictor.image_in_image(Predictor.carousel_image, screenshot)
@@ -132,13 +181,13 @@ class Predictor:
         augment_button = Predictor.image_in_image(Predictor.augment_button_image, screenshot)
         enemy_bench_empty = Predictor.image_in_image(Predictor.enemy_bench_empty_image, screenshot)
         """
-        print(f"carou{in_carousel}")
-        print(f"gh{gray_helmet}")
-        print(f"bh{blue_helmet}")
-        print(f"ab{augment_button}")
-        print(f"enemb{enemy_bench_empty}")
-        print(f"am in planning{planning}")
+        Test print statements:
+            print(f"carou{in_carousel}")
+            print(f"gh{gray_helmet}")
+            print(f"bh{blue_helmet}")
+            print(f"ab{augment_button}")
+            print(f"enemb{enemy_bench_empty}")
+            print(f"am in planning{planning}")
         """
         planning = (blue_helmet or gray_helmet) and (not in_carousel) and (not augment_button) and (enemy_bench_empty)
         return planning
-
