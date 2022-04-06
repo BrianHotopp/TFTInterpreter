@@ -7,4 +7,5 @@ data
 __pycache__
 build
 dist
+.idea
 gui_main.spec
