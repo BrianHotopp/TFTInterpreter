@@ -16,7 +16,7 @@ class TestClass:
             assert(Predictor.in_planning_phase(im2))
         im3p = Path("test/app/test_resources/3.png")
         with Image.open(im3p) as im3:
-            assert(Predictor.in_planning_phase(im3))
+            assert(not Predictor.in_planning_phase(im3))
 
 
 
