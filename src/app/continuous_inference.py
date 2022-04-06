@@ -16,11 +16,11 @@ class Predictor:
     This class predicts the units on the image.
     """
     # load static resources from disk on initialization
-    carousel_image_path = "../gather_data/resources/augmentbutton.PNG"
-    gray_helmet_path = "../gather_data/resources/helmet.PNG"
-    blue_helmet_path = "../gather_data/resources/helmetblue.PNG"
-    augment_button_path = "../gather_data/resources/augmentbutton.PNG"
-    enemy_bench_empty_path = "../gather_data/resources/emptybench.PNG"
+    carousel_image_path = "src/resources/augmentbutton.PNG"
+    gray_helmet_path = "src/resources/helmet.PNG"
+    blue_helmet_path = "src/resources/helmetblue.PNG"
+    augment_button_path = "src/resources/augmentbutton.PNG"
+    enemy_bench_empty_path = "./src/resources/emptybench.PNG"
     carousel_image = cv2.imread(carousel_image_path)
     gray_helmet_image = cv2.imread(gray_helmet_path)
     blue_helmet_image = cv2.imread(blue_helmet_path)
@@ -98,7 +98,7 @@ class Predictor:
         if show_image_popup:
             show_labeled_image(img, boxes, labels)
         return labels, boxes, scores
-    @classmethod
+    @staticmethod
     def PILtoCV2(img):
         """
         converts an image in PIL form to cv2
@@ -107,8 +107,8 @@ class Predictor:
         # Convert RGB to BGR
         open_cv_image = npimg[:, :, ::-1].copy()
         return open_cv_image
-    @classmethod
-    def image_in_image(self, image1, image2, threshold = 0.8):
+    @staticmethod
+    def image_in_image(image1, image2, threshold = 0.8):
         """
         image1: image in cv2
         image2: image in cv2
@@ -120,7 +120,7 @@ class Predictor:
             flag = True
         return flag
 
-    @classmethod
+    @staticmethod
     def in_planning_phase(screenshot):
         """
         image: PIL Screenshot
