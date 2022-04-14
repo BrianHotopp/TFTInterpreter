@@ -12,6 +12,8 @@ import os
 
 # Local Imports
 from src.app.continuous_inference import Predictor
+from src.app.synergies import SGraph, SNode
+import src.app.continuous_inference
 
 class TFT_GUI:
     """
@@ -37,12 +39,12 @@ class TFT_GUI:
 
         # set icon
         try:
-            self.master.iconbitmap("favicon.ico")
+            self.master.iconbitmap(os.path.join(os.path.dirname(__file__), "favicon.ico"))
         except:
             print("Couldn't load icon.")
 
-        # self.window_name = "League of Legends (TM) Client"
-        self.window_name = "League of Legends"
+        self.window_name = "League of Legends (TM) Client"
+        # self.window_name = "League of Legends"
 
         left, top, right, bottom = self.get_tft_window_loc()
         width = right - left
@@ -260,8 +262,22 @@ class TFT_GUI:
             # unit1,
             # unit2,
             # unit3
-        tk.Label(self.master, text="These are the units currently on the board:").pack()
-        tk.Label(self.master, text="These are the units you should buy:").pack()
+        window = self.get_tft_window_screenshot()
+        if Predictor.in_planning_phase():
+            tk.Label(self.master, text="These are the units currently on the board:").pack()
+            tk.Label(self.master, textvar=self.units_on_board)
+            tk.Label(self.master, text="These are the units you should buy:").pack()
+            if self.units_on_board != "No units currently detected on the board":
+                self.units_to_buy = "\n".join(self.get_synergies())
+                tk.Label(self.master, textvar=self.units_to_buy)
+
+    def get_synergies(self):
+        print(self.units_on_board)
+        units_list = self.units_on_board.split("\n")
+        g = SGraph()
+        g.readFile()
+        print(units_list)
+        return g.findComp(units_list)
 
     def hide_window(self) -> None:
         """
