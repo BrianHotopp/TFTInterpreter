@@ -110,8 +110,11 @@ class Predictor:
             scores: the confidence score
         """
         img = np.array(image)
-        labels, _, scores = self.reduce_prediction(*self._model.predict(img))
-        return labels, scores
+        labels, boxes, scores = self._model.predict(img)
+        if len(labels) > 0:
+            labels, _, scores = self.reduce_prediction(*self._model.predict(img))
+            return labels, scores
+        return [], []
 
     def predict_on_image_file(self, image_path, show_image_popup=False):
         """
@@ -133,7 +136,7 @@ class Predictor:
             show_labeled_image(img, boxes, labels)
         return labels, boxes, scores
 
-    @classmethod
+    @staticmethod
     def PILtoCV2(img):
         """
         Convert an image in PIL form to cv2.
@@ -147,8 +150,8 @@ class Predictor:
         open_cv_image = npimg[:, :, ::-1].copy()
         return open_cv_image
 
-    @classmethod
-    def image_in_image(self, image1, image2, threshold = 0.8):
+    @staticmethod
+    def image_in_image(image1, image2, threshold = 0.8):
         """
         Determine if an image is in another image.
         Args:
@@ -165,7 +168,7 @@ class Predictor:
             flag = True
         return flag
 
-    @classmethod
+    @staticmethod
     def in_planning_phase(screenshot):
         """
         Determine whether the player is in the planning phase.

@@ -1,3 +1,4 @@
+import os
 
 '''
 Class Snode
@@ -104,6 +105,9 @@ class SGraph:
                index = i + 700
                possibleComps[index] = diffSet    
       
+      if len(possibleComps) == 0:
+         return []
+
       unitDict = possibleComps.popitem()
       unitSet = unitDict[1]
       for i in range (len(possibleComps)):
@@ -115,8 +119,10 @@ class SGraph:
    
    def readFile(self):
       compIndex = -1
-      file = open("lvl7.txt","rb")
-      with open("lvl7.txt") as file:
+      lvl7_file = os.path.join(os.path.dirname(__file__), 'lvl7.txt')
+      file = open(lvl7_file, "rb")
+      
+      with open(lvl7_file) as file:
          for line in file:
             line = line.split("[")
             line = line[1].split(",")
@@ -135,8 +141,9 @@ class SGraph:
       file.close()
       
       compIndex = -1
-      file = open("lvl6.txt","rb")
-      with open("lvl6.txt") as file:
+      lvl6_file = os.path.join(os.path.dirname(__file__), 'lvl6.txt')
+      file = open(lvl6_file,"rb")
+      with open(lvl6_file) as file:
          for line in file:
             line = line.split("[")
             line = line[1].split(",")

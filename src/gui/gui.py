@@ -50,6 +50,7 @@ class TFT_GUI:
         width = right - left
         height = bottom - top
         self.master.geometry(f"{width}x{height}")
+        self.master.geometry("400x300")
         self.getting_units = False
 
         # this variable is mutated in the threads
@@ -62,6 +63,8 @@ class TFT_GUI:
         labels_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'set6_classes.csv')
         model_path = os.path.join(os.path.dirname(__file__), '..', 'models', '10epoch.pth')
         self.predictor = Predictor(labels_path, model_path)
+
+        self.eval = False
 
         # keybinds
         keyboard.add_hotkey("ctrl+q", lambda: self.quit_program)
@@ -105,6 +108,10 @@ class TFT_GUI:
         self.units_on_board = tk.StringVar(self.master, "No units currently detected on the board")
         self.lbl = tk.Label(self.master, textvar=self.units_on_board)
         self.lbl.pack(side="top")
+
+        self.labels = []
+        # self.show_analytics()
+
         self.master.after(100, self.update_board_state)
         self.master.mainloop()
 
@@ -163,8 +170,11 @@ class TFT_GUI:
         # spooky mutation of the parent thread's data
         # only possible because when we call this function from another thread we get
         # a reference to self, ie the parent thread's mutable data
-        r = "\n".join([f"{x[0]}:{x[1]}" for x in zip(labels, scores)])
+        # r = "\n".join([f"{x[0]}:{x[1]}" for x in zip(labels, scores)])
+        r = "\n".join([f"{x[0]}" for x in zip(labels, scores)])
         self.units_on_board.set(r)
+        self.labels = [f"{x[0]}" for x in zip(labels, scores)]
+        self.show_analytics()
 
     def update_board_state(self) -> None:
         """
@@ -262,22 +272,46 @@ class TFT_GUI:
             # unit1,
             # unit2,
             # unit3
-        window = self.get_tft_window_screenshot()
-        if Predictor.in_planning_phase():
-            tk.Label(self.master, text="These are the units currently on the board:").pack()
-            tk.Label(self.master, textvar=self.units_on_board)
-            tk.Label(self.master, text="These are the units you should buy:").pack()
-            if self.units_on_board != "No units currently detected on the board":
-                self.units_to_buy = "\n".join(self.get_synergies())
-                tk.Label(self.master, textvar=self.units_to_buy)
 
-    def get_synergies(self):
-        print(self.units_on_board)
-        units_list = self.units_on_board.split("\n")
+        # window = self.get_tft_window_screenshot()
+        # if Predictor.in_planning_phase(self.get_tft_window_screenshot()):
+        # self.lbl.grid_remove()
+        self.clear_window(self.master)
+        # if self.eval_txt:
+            # self.eval_txt.grid_remove()
+        tk.Label(self.master, text="These are the units currently on the board:").pack()
+        if len(self.labels) == 0:
+            tk.Label(self.master, text="No units found").pack()
+        else:
+            tk.Label(self.master, textvar=self.units_on_board).pack()
+        tk.Label(self.master, text="These are the units you should buy:").pack()
+        # if self.units_on_board != "No units currently detected on the board":
+        # r = "\n".join([f"{x[0]}" for x in zip(labels, scores)])
+        # self.units_on_board.set(r)
+        self.to_buy = self.get_synergies(self.labels)
+        # print(self.labels)
+        # print(len(self.to_buy))
+        if len(self.to_buy) == 0:
+            tk.Label(self.master, text="No compositions found").pack()
+        else:
+            self.units_to_buy = "\n".join(self.to_buy)
+            print(self.units_to_buy)
+            tk.Label(self.master, text="\n".join(self.to_buy)).pack()
+            # tk.Label(self.master, text="Hello").pack()
+        # else:
+        #     if self.eval == False:
+        #         self.eval_txt = tk.Label(self.master, text="Could not evaluate the board. Not in planning phase.").pack()
+        #         self.eval = True
+            # self.lbl.grid_remove()
+
+    def get_synergies(self, labels):
+        # print(self.units_on_board)
+        # units_list = self.units_on_board.split("\n")
+        # print(labels)
         g = SGraph()
         g.readFile()
-        print(units_list)
-        return g.findComp(units_list)
+        # print(units_list)
+        return g.findComp(labels)
 
     def hide_window(self) -> None:
         """
@@ -295,3 +329,17 @@ class TFT_GUI:
             self: the current gui object
         """
         self.master.quit()
+
+    def all_children(self, window) :
+        _list = window.winfo_children()
+
+        for item in _list :
+            if item.winfo_children() :
+                _list.extend(item.winfo_children())
+
+        return _list
+
+    def clear_window(self, window):
+        widget_list = self.all_children(window)
+        for item in widget_list:
+            item.pack_forget()
