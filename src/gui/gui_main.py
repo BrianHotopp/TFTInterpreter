@@ -9,10 +9,10 @@ from src.gui.gui import TFT_GUI
 # pipreqs path/to/project
 # autopytoexe (for creating exe)
 
-# needed to install from the download (python 3.9, x64)
-# https://github.com/mhammond/pywin32/releases
-
 # pyinstaller --onefile C:\Users\gwyne\Documents\GitHub\TFTInterpreter\gui\gui_main.py -w
+
+# To Run:
+# python -m src.gui.gui_main
 
 # TO DO:
 # - add in widget/box for statistics
@@ -21,8 +21,8 @@ from src.gui.gui import TFT_GUI
 
 if __name__ == "__main__":
     # only run the GUI if the League Client is open
-    #if "LeagueClient.exe" in (i.name() for i in psutil.process_iter()):
+    # if "LeagueClient.exe" in (i.name() for i in psutil.process_iter()):
     if True:
         g = TFT_GUI()
-    else:
-        print("League client not open")
+    # else:
+        # print("League client not open")

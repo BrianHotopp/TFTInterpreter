@@ -16,11 +16,11 @@ class Predictor:
     This class predicts the units on the image.
     """
     # load static resources from disk on initialization
-    carousel_image_path = "../gather_data/resources/augmentbutton.PNG"
-    gray_helmet_path = "../gather_data/resources/helmet.PNG"
-    blue_helmet_path = "../gather_data/resources/helmetblue.PNG"
-    augment_button_path = "../gather_data/resources/augmentbutton.PNG"
-    enemy_bench_empty_path = "../gather_data/resources/emptybench.PNG"
+    carousel_image_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'carousel.PNG')
+    gray_helmet_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'helmet.PNG')
+    blue_helmet_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'helmetblue.PNG')
+    augment_button_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'augmentbutton.PNG')
+    enemy_bench_empty_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'emptybench.PNG')
     carousel_image = cv2.imread(carousel_image_path)
     gray_helmet_image = cv2.imread(gray_helmet_path)
     blue_helmet_image = cv2.imread(blue_helmet_path)

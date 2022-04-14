@@ -1,11 +1,14 @@
 #!python
 
 # Third Party Imports
+import sys
 import tkinter as tk
 import keyboard
 import threading
 import PIL
+from PIL import ImageGrab
 from win32 import win32gui
+import os
 
 # Local Imports
 from src.app.continuous_inference import Predictor
@@ -38,7 +41,8 @@ class TFT_GUI:
         except:
             print("Couldn't load icon.")
 
-        self.window_name = "League of Legends (TM) Client"
+        # self.window_name = "League of Legends (TM) Client"
+        self.window_name = "League of Legends"
 
         left, top, right, bottom = self.get_tft_window_loc()
         width = right - left
@@ -53,8 +57,8 @@ class TFT_GUI:
         self.thd = None
 
         # todo handle these paths less like an idiot
-        labels_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\gather_data\\resources\set6_classes.txt"
-        model_path = "E:\Dropbox\Spring 2022\Software Design and Documentation\code\src\models\\10epoch.pth"
+        labels_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'set6_classes.csv')
+        model_path = os.path.join(os.path.dirname(__file__), '..', 'models', '10epoch.pth')
         self.predictor = Predictor(labels_path, model_path)
 
         # keybinds
@@ -116,8 +120,12 @@ class TFT_GUI:
             window rectangle in terms of left, top, right, bottom
         """
         hwnd = win32gui.FindWindow(None, self.window_name)
+
         # get points and dimensions of window
-        bbox = win32gui.GetWindowRect(hwnd)
+        try:
+            bbox = win32gui.GetWindowRect(hwnd)
+        except Exception as e:
+            sys.exit("error retrieving window location")
         return bbox
 
     def get_tft_window_screenshot(self) -> PIL.Image.Image:
@@ -128,7 +136,7 @@ class TFT_GUI:
         Returns:
             image object
         """
-        im = PIL.ImageGrab.grab(self.get_tft_window_loc())
+        im = ImageGrab.grab(self.get_tft_window_loc())
         return im
 
     def save_image(self) -> None:
