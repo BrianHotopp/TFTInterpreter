@@ -2,6 +2,7 @@ from pathlib import Path
 from multiprocessing import Pool
 import itertools
 from re import M
+import heapq
 import functools
 import re
 import numpy as np
@@ -69,21 +70,19 @@ def add_if_good(measure, queue, team):
     else:
         print("insert initial")
         queue.put((measure_value, team))
-
 def best_of_size(units, size, measure, top_n):
     """
     returns the top n teams of size size using measure to evaluate the teams
     """
-    p = Pool(processes=100)
-    best = queue.PriorityQueue(maxsize=top_n)
-    # todo use ur brain and figure out if there is some multithreading
-    # issue with the priority queue ie if some other thread can 
-    # replace the worst element before we get to it
+    p = Pool(processes=200)
     combs = itertools.combinations(range(units.shape[0]), size)
-    afg = functools.partial(add_if_good, measure, best)
-    p.imap(afg, combs, chunksize=10000)
+    # copy of combs iterator
+    first_combs, second_combs = itertools.tee(combs)
+    # get the top n teams in parallel
+    all_teams_it = zip(p.imap(measure, first_combs, chunksize=10000), second_combs)
+    r = heapq.nlargest(top_n, all_teams_it, key=lambda x: x[0])
     p.close()
-    return best
+    return r
 
 def fill_mask(mask, input_traits, l, id, breaks):
     """
@@ -91,12 +90,13 @@ def fill_mask(mask, input_traits, l, id, breaks):
     """
     for b in reversed(breaks):
         # todo do this fast with numba
+        # count the number of times id occurs in the input traits list
         count = 0
         for i in range(l):
             if input_traits[i] == id:
                 count += 1
         if count >= b:
-            # fill b spots in mask where id is input_traits
+            # fill b spots in the mask where id is input_traits
             filled = 0
             for i in range(l):
                 if input_traits[i] == id:
@@ -106,16 +106,13 @@ def fill_mask(mask, input_traits, l, id, breaks):
                         break
             
 def is_perfect_synergy(team, units, trait_breaks, null_trait_id, traits_arr, t_mask):
+    # build up the traits array
     # zero the mask
     t_mask[:] = 0
-    # zero the traits array
-    traits_arr[:] = 0
-    # build up the traits array
     l = 0
     for i in team:
         # paste the masked values onto the next available indices of traits_arr
-        m = units[i][2:6] != null_trait_id
-        t = units[i][2:6][m]
+        t = units[i][2:6][units[i][2:6] != null_trait_id]
         traits_arr[l:l+t.shape[0]] = t
         l += t.shape[0]
     for trait_id in trait_breaks:

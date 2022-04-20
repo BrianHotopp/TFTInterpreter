@@ -225,14 +225,11 @@ class TestClass:
         )
         ovr = gps.best_of_size(units, team_size, perfect, top_n)
         # dump the queue to a list
-        print("Found the following teams:", ovr.queue)
+        print("Found the following teams:", ovr)
         # for each team, check that it is a perfect synergy
         # print the team with the unit names
-        for i in range(top_n):
-            team_indices = ovr.queue[i][1]
+        for i in range(len(ovr)):
+            team_indices = ovr[i][1]
             team_unit_names = [unit_dict[i] for i in team_indices]
-            print("Team: ", team_unit_names, "Score: ", ovr.queue[i][0])
+            print("Team: ", team_unit_names, "Score: ", ovr[i][0])
         assert False
-        for team in ovr.queue:
-            print("Team: ", team)
-            assert pf(units, team[1])
