@@ -130,21 +130,15 @@ def fill_mask(mask, input_traits, id, breaks):
                     if filled == b:
                         break
             
-def is_perfect_synergy(units, team, origin_breaks, class_breaks):
+def is_perfect_synergy(units, team, trait_breaks):
     # list of all origins in the team with repeats
-    origins = []
+    traits = []
     for i in team:
-        origins.extend(units[i,2:4])
-    classes = []
-    for i in team:
-        classes.extend(units[i,4:6])
-    o_mask = [0] * len(origins)
-    for trait_id in origin_breaks:
-        fill_mask(o_mask, origins, trait_id, origin_breaks[trait_id])
-    c_mask = [0] * len(classes)
-    for trait_id in class_breaks:
-        fill_mask(c_mask, origins, trait_id, class_breaks[trait_id])
-    return np.all(o_mask) and np.all(c_mask)
+        traits.extend(units[i,2:6])
+    t_mask = [0] * len(traits)
+    for trait_id in trait_breaks:
+        fill_mask(t_mask, traits, trait_id, trait_breaks[trait_id])
+    return int(np.all(t_mask))
 
 def main():
     units_data_path = Path("src/resources/champs.csv")
