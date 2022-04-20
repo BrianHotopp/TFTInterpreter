@@ -2,6 +2,7 @@ from pathlib import Path
 from multiprocessing import Pool
 import itertools
 from re import M
+import functools
 import re
 import numpy as np
 import queue 
@@ -49,79 +50,39 @@ def load_units(path):
     # to np array for big zoom zoom
     units = np.array(units)
     return units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv
-def get_prefixes(units, prefix_size):
-    """
-    unit_ids: np array
-    returns an iterator of all possible 2 unit prefixes (uses indexes)
-    """
-    return itertools.combinations(range(units.shape[0]), prefix_size)
-def get_ranges(l, p):
-    """
-    """
-    # the prefix is in sorted order already
-    ranges = []
-    for i in range(len(p)):
-        if i == 0:
-            ranges.append(range(p[i]))
-        else:
-            ranges.append(range(p[i-1]+1, p[i]))
-    ranges.append(range(min(p[-1]+1, l), l))
-    return ranges
 
-def get_unused_it(units, prefix):
+def add_if_good(measure, queue, team):
     """
-    prefix: list of indexes we should not use
-    returns an iterator of all possible combinations of units excluding the prefix (uses indexes)
-    """
-    """
-    units has length n
-    [|0|1|] -> [2, 3, 4, 5,... n]
-    [1, 2] -> [0, 3, 4, 5, ... n]
-    """
-    ranges = get_ranges(units.shape[0], prefix)
-    return itertools.chain(*ranges)
-
-def get_partial_combination(units, prefix, size):
-    """
-    units: np array
-    prefix: list of indexes we should not use
-    returns an iterator of all possible combinations of units excluding the prefix (uses indexes)
-    each element is a list of indexes of length size-len(prefix)
-    """
-    unused = get_unused_it(units, prefix)
-    return itertools.combinations(unused, size-len(prefix))
-def best_by_measure(units, prefix, size, measure, priority_queue):
-    """
-    units: np array
-    prefix: list of indexes we should not use
-    size: number of units to choose
     measure: function to use to evaluate a combination
-    priority_queue: thread safe priority queue
+    queue: thread safe priority queue
+    team: list of indexes of units
     """
-    for postfix in get_partial_combination(units, prefix, size):
-        # todo optimize this by not creating a variable for the full team
-        full = prefix + postfix
-        measure_value = measure(units, full)
-        # attempt to add to the priority queue if measure value is better (larger) than the worst element
-        if priority_queue.full():
-            if measure_value > priority_queue.queue[0][0]:
-                print("found a better team")
-                # remove the worst element
-                priority_queue.get()
-                # add the new element
-                priority_queue.put((measure_value, full))
-        else:
-            print("insert initial")
-            priority_queue.put((measure_value, full))
+    measure_value = measure(team)
+    # attempt to add to the priority queue if measure value is better (larger) than the worst element
+    if queue.full():
+        if measure_value > queue.queue[0][0]:
+            print("found a better team")
+            # remove the worst element
+            queue.get()
+            # add the new element
+            queue.put((measure_value, team))
+    else:
+        print("insert initial")
+        queue.put((measure_value, team))
 
-def best_overall(units, prefix_size, size, measure, top_n):
+def best_of_size(units, size, measure, top_n):
+    """
+    returns the top n teams of size size using measure to evaluate the teams
+    """
     p = Pool(processes=100)
     best = queue.PriorityQueue(maxsize=top_n)
+    # todo use ur brain and figure out if there is some multithreading
+    # issue with the priority queue ie if some other thread can 
+    # replace the worst element before we get to it
     combs = itertools.combinations(range(units.shape[0]), size)
-    for comb in combs:
-        measure_value = measure(units, comb)
-        if measure_value == 1:
-            best.put((measure_value, comb))
+    afg = functools.partial(add_if_good, measure, best)
+    p.imap(afg, combs, chunksize=10000)
+    p.close()
     return best
 
 def fill_mask(mask, input_traits, l, id, breaks):
@@ -144,17 +105,17 @@ def fill_mask(mask, input_traits, l, id, breaks):
                     if filled == b:
                         break
             
-def is_perfect_synergy(units, team, trait_breaks, null_trait_id, traits_arr, t_mask, l):
+def is_perfect_synergy(team, units, trait_breaks, null_trait_id, traits_arr, t_mask):
     # zero the mask
     t_mask[:] = 0
     # zero the traits array
     traits_arr[:] = 0
     # build up the traits array
+    l = 0
     for i in team:
         # paste the masked values onto the next available indices of traits_arr
         m = units[i][2:6] != null_trait_id
         t = units[i][2:6][m]
-        mslice = traits_arr[l:l+len(t)]
         traits_arr[l:l+t.shape[0]] = t
         l += t.shape[0]
     for trait_id in trait_breaks:
