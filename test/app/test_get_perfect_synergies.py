@@ -177,24 +177,6 @@ class TestClass:
         # try looking up the traits for each unit
         # get the indices of the units in the team
         t1_ids = [unit_dict_inv[u] for u in t1]
-        test = [unit_dict[u] for u in t1_ids]
-        print("im here")
-        print(test)
-        # get the traits of the units in the team
-        t1_traits = [units[i, 2:6] for i in t1_ids]
-        print("traits dict: ", trait_dict)
-        print()
-        print("t1 traits: ", t1_traits)
-        # get the trait names of the traits
-        traitlsits = []
-        for traitl in t1_traits:
-            inner = []
-            for trait in traitl:
-                inner.append(trait_dict[trait])
-            traitlsits.append(inner)
-        print(list(zip(t1, traitlsits)))
-
-        print("t1_ids: ", t1_ids)
         team_size = len(t1_ids)
         max_size = team_size * 4
         traits_arr = np.zeros((max_size,))
@@ -203,7 +185,28 @@ class TestClass:
         null_trait_id = trait_dict_inv[""]
         pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks, null_trait_id = null_trait_id, traits_arr=traits_arr, t_mask = mask_arr, l=l)
         assert pf(units, t1_ids)
-    @pytest.mark.skip(reason="not implemented")
+    def test_is_perfect_synergy3(self):
+        # load champs
+        path = Path("test/app/test_resources/champs.csv")
+        units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv = gps.load_units(path)
+        # load the breakpoints
+        tpath = Path("test/app/test_resources/traits.csv")
+        breakpoints = gps.load_breakpoints(tpath)
+        trait_breaks = {trait_dict_inv[k]: v for k, v in breakpoints.items()}
+        # some known perfect synergies
+        t1 = ['Ahri', 'Ashe', 'Alistar', 'Braum']
+        # try looking up the traits for each unit
+        # get the indices of the units in the team
+        t1_ids = [unit_dict_inv[u] for u in t1]
+        team_size = len(t1_ids)
+        max_size = team_size * 4
+        traits_arr = np.zeros((max_size,))
+        mask_arr = np.zeros((max_size,))
+        l=0
+        null_trait_id = trait_dict_inv[""]
+        pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks, null_trait_id = null_trait_id, traits_arr=traits_arr, t_mask = mask_arr, l=l)
+        assert pf(units, t1_ids)
+
     def test_best_overall(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
@@ -219,8 +222,6 @@ class TestClass:
         traits_arr = np.zeros((4 * team_size,))
         t_mask = np.zeros((4 * team_size,))
         pf = partial(gps.is_perfect_synergy, trait_breaks=trait_breaks, null_trait_id=null_trait_id, traits_arr = traits_arr, t_mask = t_mask, l=0)
-        # use only three of the units
-        units = units[:units.shape[0]//5]
         ovr = gps.best_overall(units, prefix_size, team_size, pf, top_n)
         # dump the queue to a list
         print("Found the following teams:", ovr.queue)

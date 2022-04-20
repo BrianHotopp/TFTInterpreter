@@ -139,6 +139,10 @@ def fill_mask(mask, input_traits, l, id, breaks):
                         break
             
 def is_perfect_synergy(units, team, trait_breaks, null_trait_id, traits_arr, t_mask, l):
+    # zero the mask
+    t_mask[:] = 0
+    # zero the traits array
+    traits_arr[:] = 0
     # build up the traits array
     for i in team:
         # paste the masked values onto the next available indices of traits_arr
