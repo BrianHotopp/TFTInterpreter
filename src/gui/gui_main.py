@@ -20,9 +20,4 @@ from src.gui.gui import TFT_GUI
 # - fix exe (window opens in the wrong spot)
 
 if __name__ == "__main__":
-    # only run the GUI if the League Client is open
-    #if "LeagueClient.exe" in (i.name() for i in psutil.process_iter()):
-    if True:
-        g = TFT_GUI()
-    else:
-        print("League client not open")
+    g = TFT_GUI()
