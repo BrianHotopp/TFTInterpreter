@@ -114,8 +114,15 @@ def best_by_measure(units, prefix, size, measure, priority_queue):
 
 def best_overall(units, prefix_size, size, measure, top_n):
     best = queue.PriorityQueue(maxsize=top_n)
-    for prefix in get_prefixes(units, prefix_size):
-        best_by_measure(units, prefix, size, measure, best)
+    combs = itertools.combinations(range(units.shape[0]), size)
+    for comb in combs:
+        measure_value = measure(units, comb)
+        if best.full():
+            if measure_value > best.queue[0][0]:
+                best.get()
+                best.put((measure_value, comb))
+        else:
+            best.put((measure_value, comb))
     return best
 
 def fill_mask(mask, input_traits, l, id, breaks):
