@@ -1,6 +1,8 @@
 from pathlib import Path
+from multiprocessing import Pool
 import itertools
 from re import M
+import re
 import numpy as np
 import queue 
 import random
@@ -113,15 +115,12 @@ def best_by_measure(units, prefix, size, measure, priority_queue):
             priority_queue.put((measure_value, full))
 
 def best_overall(units, prefix_size, size, measure, top_n):
+    p = Pool(processes=100)
     best = queue.PriorityQueue(maxsize=top_n)
     combs = itertools.combinations(range(units.shape[0]), size)
     for comb in combs:
         measure_value = measure(units, comb)
-        if best.full():
-            if measure_value > best.queue[0][0]:
-                best.get()
-                best.put((measure_value, comb))
-        else:
+        if measure_value == 1:
             best.put((measure_value, comb))
     return best
 

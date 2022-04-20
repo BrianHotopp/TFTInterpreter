@@ -173,7 +173,8 @@ class TestClass:
         breakpoints = gps.load_breakpoints(tpath)
         trait_breaks = {trait_dict_inv[k]: v for k, v in breakpoints.items()}
         # some known perfect synergies
-        t1 = ["Poppy", "Ziggs", "Blitzcrank", "Vex"]
+        #t1 = ["Poppy", "Ziggs", "Blitzcrank", "Vex"]
+        t1 = ["Ziggs", "Gnar", "Vex", "Irelia"]
         # try looking up the traits for each unit
         # get the indices of the units in the team
         t1_ids = [unit_dict_inv[u] for u in t1]
@@ -205,8 +206,8 @@ class TestClass:
         l=0
         null_trait_id = trait_dict_inv[""]
         pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks, null_trait_id = null_trait_id, traits_arr=traits_arr, t_mask = mask_arr, l=l)
-        assert pf(units, t1_ids)
-
+        assert not pf(units, t1_ids)
+    @pytest.mark.skip(reason="not implemented")
     def test_best_overall(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
