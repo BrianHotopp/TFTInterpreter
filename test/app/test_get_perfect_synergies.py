@@ -1,6 +1,8 @@
+from cgi import test
 import functools
 from pathlib import Path
 import itertools
+import pytest
 import numpy as np
 import src.app.get_perfect_synergies as gps
 from functools import partial
@@ -123,35 +125,85 @@ class TestClass:
         assert(ovr_list[i][0] == 57 + 58 + 59)
 
     def test_fill_mask(self):
-        mask = [0] * 10
+        team_size = 10
         id = 1
-        input_traits = [1, 2, 3, 1, 1, 1, 1, 1, 1, 1]
+        traits_arr = np.zeros((team_size,))
+        mask_arr = np.zeros((team_size,))
+        alltraits = [1, 2, 3, 1, 1, 1, 1, 1, 1, 1]
+        traits_arr[:len(alltraits)] = alltraits
+        l = len(alltraits)
         breaks = [3, 5, 7]
-        gps.fill_mask(mask, input_traits, id, breaks)
+        gps.fill_mask(mask_arr, traits_arr, l, id, breaks)
         truth = [1, 0, 0, 1, 1, 1, 1, 1, 1, 0]
-        assert(mask == truth)
-        gps.fill_mask(mask, input_traits, id, breaks)
-        assert(mask == truth)
+        truth_arr = np.zeros((team_size,))
+        truth_arr[:len(truth)] = truth
+        assert(np.array_equal(truth_arr, mask_arr))
+    @pytest.mark.skip(reason="not implemented")
     def test_is_perfect_synergy(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
         units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv = gps.load_units(path)
         # arbitrary team
         team = (0, 1, 2)
+        team_size = len(team) * 4
         # print the origins of the tea
         # constructed breakpoints
         # team has
         # syndicate arcanist hextech colossus syndicate sniper
-        syn_trait_id = trait_dict["Syndicate"]
-        arcan_trait_id = trait_dict["Arcanist"]
-        hex_trait_id = trait_dict["Hextech"]
-        colo_trait_id = trait_dict["Colossus"]
-        sniper_trait_id = trait_dict["Sniper"]
+        syn_trait_id = trait_dict_inv["Syndicate"]
+        arcan_trait_id = trait_dict_inv["Arcanist"]
+        hex_trait_id = trait_dict_inv["Hextech"]
+        colo_trait_id = trait_dict_inv["Colossus"]
+        sniper_trait_id = trait_dict_inv["Sniper"]
+        null_trait_id = trait_dict_inv[""]
         # construct a set of breakpoints that makes the team a perfect synergy
         trait_breaks = {syn_trait_id: [2], arcan_trait_id: [1], hex_trait_id: [1], colo_trait_id: [1], sniper_trait_id: [1]}
-        pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks)
+        traits_arr = np.zeros((team_size,))
+        mask_arr = np.zeros((team_size,))
+        print("initial traits array: ", traits_arr)
+        print("initial mask array: ", mask_arr)
+        pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks, null_trait_id = null_trait_id, traits_arr=traits_arr, t_mask = mask_arr, l=0)
         assert pf(units, team)
-    @pytest.mark.skip(reason="unit testing internals")
+    def test_is_perfect_synergy2(self):
+        # load champs
+        path = Path("test/app/test_resources/champs.csv")
+        units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv = gps.load_units(path)
+        # load the breakpoints
+        tpath = Path("test/app/test_resources/traits.csv")
+        breakpoints = gps.load_breakpoints(tpath)
+        trait_breaks = {trait_dict_inv[k]: v for k, v in breakpoints.items()}
+        # some known perfect synergies
+        t1 = ["Poppy", "Ziggs", "Blitzcrank", "Vex"]
+        # try looking up the traits for each unit
+        # get the indices of the units in the team
+        t1_ids = [unit_dict_inv[u] for u in t1]
+        test = [unit_dict[u] for u in t1_ids]
+        print("im here")
+        print(test)
+        # get the traits of the units in the team
+        t1_traits = [units[i, 2:6] for i in t1_ids]
+        print("traits dict: ", trait_dict)
+        print()
+        print("t1 traits: ", t1_traits)
+        # get the trait names of the traits
+        traitlsits = []
+        for traitl in t1_traits:
+            inner = []
+            for trait in traitl:
+                inner.append(trait_dict[trait])
+            traitlsits.append(inner)
+        print(list(zip(t1, traitlsits)))
+
+        print("t1_ids: ", t1_ids)
+        team_size = len(t1_ids)
+        max_size = team_size * 4
+        traits_arr = np.zeros((max_size,))
+        mask_arr = np.zeros((max_size,))
+        l=0
+        null_trait_id = trait_dict_inv[""]
+        pf = functools.partial(gps.is_perfect_synergy, trait_breaks = trait_breaks, null_trait_id = null_trait_id, traits_arr=traits_arr, t_mask = mask_arr, l=l)
+        assert pf(units, t1_ids)
+    @pytest.mark.skip(reason="not implemented")
     def test_best_overall(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
@@ -161,12 +213,24 @@ class TestClass:
         trait_breaks_sk = gps.load_breakpoints(path)
         trait_breaks = {trait_dict_inv[k]: v for k, v in trait_breaks_sk.items()}
         prefix_size = 2
-        team_size = 3
-        top_n = 100
-        pf = partial(gps.is_perfect_synergy, trait_breaks=trait_breaks)
+        team_size = 4
+        top_n = 8 
+        null_trait_id = trait_dict_inv[""]
+        traits_arr = np.zeros((4 * team_size,))
+        t_mask = np.zeros((4 * team_size,))
+        pf = partial(gps.is_perfect_synergy, trait_breaks=trait_breaks, null_trait_id=null_trait_id, traits_arr = traits_arr, t_mask = t_mask, l=0)
+        # use only three of the units
+        units = units[:units.shape[0]//5]
         ovr = gps.best_overall(units, prefix_size, team_size, pf, top_n)
         # dump the queue to a list
-        top = tuple(ovr.queue[0][1])
-        print(top)
-        # check that the top team is perfect synergy
-        assert pf(units, top)
+        print("Found the following teams:", ovr.queue)
+        # for each team, check that it is a perfect synergy
+        # print the team with the unit names
+        for i in range(top_n):
+            team_indices = ovr.queue[i][1]
+            team_unit_names = [unit_dict[i] for i in team_indices]
+            print("Team: ", team_unit_names, "Score: ", ovr.queue[i][0])
+        assert(False)
+        for team in ovr.queue:
+            print("Team: ", team)
+            assert pf(units, team[1])

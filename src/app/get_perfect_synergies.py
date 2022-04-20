@@ -31,9 +31,9 @@ def load_units(path):
     # remove newline characters and whitespace
     units = [[unit[0].strip(), int(unit[1].strip()), unit[2].strip(), unit[3].strip(), unit[4].strip(), unit[5].strip()] for unit in units]
     # get a set of all unit names
-    unit_names = set([unit[0] for unit in units])
+    unit_names = list([unit[0] for unit in units])
     # get a set of all traits
-    traits = set([unit[2] for unit in units]).union(set([unit[3] for unit in units])).union(set([unit[4] for unit in units])).union(set([unit[5] for unit in units]))
+    traits = list(set([unit[2] for unit in units]).union(set([unit[3] for unit in units])).union(set([unit[4] for unit in units])).union(set([unit[5] for unit in units])))
     # create a dictionary mapping number to unit name
     unit_dict = {i:unit for i, unit in enumerate(unit_names)}
     # inverse of unit_dict
@@ -97,16 +97,19 @@ def best_by_measure(units, prefix, size, measure, priority_queue):
     priority_queue: thread safe priority queue
     """
     for postfix in get_partial_combination(units, prefix, size):
+        # todo optimize this by not creating a variable for the full team
         full = prefix + postfix
         measure_value = measure(units, full)
         # attempt to add to the priority queue if measure value is better (larger) than the worst element
         if priority_queue.full():
             if measure_value > priority_queue.queue[0][0]:
+                print("found a better team")
                 # remove the worst element
                 priority_queue.get()
                 # add the new element
                 priority_queue.put((measure_value, full))
         else:
+            print("insert initial")
             priority_queue.put((measure_value, full))
 
 def best_overall(units, prefix_size, size, measure, top_n):
@@ -115,30 +118,38 @@ def best_overall(units, prefix_size, size, measure, top_n):
         best_by_measure(units, prefix, size, measure, best)
     return best
 
-def fill_mask(mask, input_traits, id, breaks):
+def fill_mask(mask, input_traits, l, id, breaks):
     """
     fills the mask as much as possible for the given input trait id
     """
     for b in reversed(breaks):
-        if input_traits.count(id) >= b:
+        # todo do this fast with numba
+        count = 0
+        for i in range(l):
+            if input_traits[i] == id:
+                count += 1
+        if count >= b:
             # fill b spots in mask where id is input_traits
             filled = 0
-            for i in range(len(input_traits)):
+            for i in range(l):
                 if input_traits[i] == id:
                     mask[i] = 1
                     filled += 1
                     if filled == b:
                         break
             
-def is_perfect_synergy(units, team, trait_breaks):
-    # list of all origins in the team with repeats
-    traits = []
+def is_perfect_synergy(units, team, trait_breaks, null_trait_id, traits_arr, t_mask, l):
+    # build up the traits array
     for i in team:
-        traits.extend(units[i,2:6])
-    t_mask = [0] * len(traits)
+        # paste the masked values onto the next available indices of traits_arr
+        m = units[i][2:6] != null_trait_id
+        t = units[i][2:6][m]
+        mslice = traits_arr[l:l+len(t)]
+        traits_arr[l:l+t.shape[0]] = t
+        l += t.shape[0]
     for trait_id in trait_breaks:
-        fill_mask(t_mask, traits, trait_id, trait_breaks[trait_id])
-    return int(np.all(t_mask))
+        fill_mask(t_mask, traits_arr, l, trait_id, trait_breaks[trait_id])
+    return int(np.all(t_mask[:l]))
 
 def main():
     units_data_path = Path("src/resources/champs.csv")
