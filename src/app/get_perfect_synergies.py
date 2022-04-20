@@ -4,10 +4,20 @@ from re import M
 import numpy as np
 import queue 
 import random
+from functools import partial
 def load_breakpoints(path):
     """
     load breakpoints from a file
+    each line has the first column as the breakpoint and all other
+    columns are part of the breakpoint
     """
+    with path.open() as f:
+        breakpoints = f.readlines()
+    breakpoints = [[x.strip() for x in breakpoint.split(",")] for breakpoint in breakpoints]
+    traits = [x[0] for x in breakpoints]
+    breakpoints = [[int(y) for y in x[1:]] for x in breakpoints]
+    breakpoints = {trait:breakpoint for trait, breakpoint in zip(traits, breakpoints)}
+    return breakpoints
 def load_units(path):
     """
     Loads units from a file.
@@ -84,8 +94,6 @@ def get_partial_combination(units, prefix, size):
     """
     unused = get_unused_it(units, prefix)
     return itertools.combinations(unused, size-len(prefix))
-def dummy_measure(units, full):
-    return sum(full)
 def best_by_measure(units, prefix, size, measure, priority_queue):
     """
     units: np array
@@ -112,7 +120,38 @@ def best_overall(units, prefix_size, size, measure, top_n):
     for prefix in get_prefixes(units, prefix_size):
         best_by_measure(units, prefix, size, measure, best)
     return best
- 
+
+def fill_mask(mask, input_traits, id, breaks):
+    """
+    fills the mask as much as possible for the given input trait id
+    """
+    for b in reversed(breaks):
+        if input_traits.count(id) >= b:
+            # fill b spots in mask where id is input_traits
+            filled = 0
+            for i in range(len(input_traits)):
+                if input_traits[i] == id:
+                    mask[i] = 1
+                    filled += 1
+                    if filled == b:
+                        break
+            
+def is_perfect_synergy(units, team, origin_breaks, class_breaks):
+    # list of all origins in the team with repeats
+    origins = []
+    for i in team:
+        origins.extend(units[i,2:4])
+    classes = []
+    for i in team:
+        classes.extend(units[i,4:6])
+    o_mask = [0] * len(origins)
+    for trait_id in origin_breaks:
+        fill_mask(o_mask, origins, trait_id, origin_breaks[trait_id])
+    c_mask = [0] * len(classes)
+    for trait_id in class_breaks:
+        fill_mask(c_mask, origins, trait_id, class_breaks[trait_id])
+    return np.all(o_mask) and np.all(c_mask)
+
 def main():
     units_data_path = Path("src/resources/champs.csv")
     units_data = load_units("units.txt")

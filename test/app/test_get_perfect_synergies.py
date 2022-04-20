@@ -2,7 +2,7 @@ from pathlib import Path
 import itertools
 import numpy as np
 import src.app.get_perfect_synergies as gps
-
+from functools import partial
 class TestClass:
     def test_load_units(self):
         path = Path("test/app/test_resources/champs.csv")
@@ -16,6 +16,55 @@ class TestClass:
         assert len(origin_dict) == len(origin_dict_inv)
         # check that the class dict is the same length as the inverse
         assert len(class_dict) == len(class_dict_inv)
+        # check that the keys of unit dict are ints
+        for k in unit_dict:
+            assert isinstance(k, int)
+        # check that the values of unit dict are strings
+        for v in unit_dict.values():
+            assert isinstance(v, str)
+        # check that the keys of unit dict inv are strings
+        for k in unit_dict_inv:
+            assert isinstance(k, str)
+        # check that the values of unit dict inv are ints
+        for v in unit_dict_inv.values():
+            assert isinstance(v, int)
+        # check that the keys of origin dict are ints
+        for k in origin_dict:
+            assert isinstance(k, int)
+        # check that the values of origin dict are strings
+        for v in origin_dict.values():
+            assert isinstance(v, str)
+        # check that the keys of origin dict inv are strings
+        for k in origin_dict_inv:
+            assert isinstance(k, str)
+        # check that the values of origin dict inv are ints
+        for v in origin_dict_inv.values():
+            assert isinstance(v, int)
+        # check that the keys of class dict are ints
+        for k in class_dict:
+            assert isinstance(k, int)   
+        # check that the values of class dict are strings
+        for v in class_dict.values():
+            assert isinstance(v, str)
+        # check that the keys of class dict inv are strings
+        for k in class_dict_inv:
+            assert isinstance(k, str)
+        # check that the values of class dict inv are ints
+        for v in class_dict_inv.values():
+            assert isinstance(v, int)
+
+    def test_load_breakpoints(self):
+        path = Path("test/app/test_resources/origins.csv")
+        breakpoints = gps.load_breakpoints(path)
+        # spot check some known breakpoints
+        bp = breakpoints["Mastermind"]
+        assert(len(bp) == 1)
+        bp = breakpoints["Debonair"]
+        assert(len(bp) == 3)
+        truth = [3, 5, 7]
+        for i in range(len(bp)):
+            assert(bp[i] == truth[i])
+
     def test_get_ranges(self):
         path = Path("test/app/test_resources/champs.csv")
         units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv = gps.load_units(path)
@@ -69,8 +118,10 @@ class TestClass:
         units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv = gps.load_units(path)
         prefix_size = 2
         team_size = 3
-        top_n = 10
-        ovr = gps.best_overall(units, prefix_size, team_size, gps.measure, top_n)
+        top_n = 1
+        def dummy_measure(units, full):
+            return sum(full)
+        ovr = gps.best_overall(units, prefix_size, team_size, dummy_measure, top_n)
         # dump the queue to a list
         ovr_list = list(ovr.queue)
         assert len(ovr_list) == top_n
@@ -80,4 +131,42 @@ class TestClass:
         for i in range(len(ovr_list)):
             print("Team: ", i, "Score: ", ovr_list[i])
             print(ovr_list[i][0])
-        assert(False)
+        # since the dummy scoring just adds the indices of the team
+        # the top team should just be the last 3 units in the input file
+        # because they have the highest indices
+        assert(ovr_list[i][0] == 57 + 58 + 59)
+
+    def test_fill_mask(self):
+        mask = [0] * 10
+        id = 1
+        input_traits = [1, 2, 3, 1, 1, 1, 1, 1, 1, 1]
+        breaks = [3, 5, 7]
+        gps.fill_mask(mask, input_traits, id, breaks)
+        truth = [1, 0, 0, 1, 1, 1, 1, 1, 1, 0]
+        assert(mask == truth)
+        gps.fill_mask(mask, input_traits, id, breaks)
+        assert(mask == truth)
+    def test_is_perfect_synergy(self):
+        # load champs
+        path = Path("test/app/test_resources/champs.csv")
+        units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv = gps.load_units(path)
+        # load origin breaks
+        path = Path("test/app/test_resources/origins.csv")
+        origin_breakpoints_str_k = gps.load_breakpoints(path)
+        origin_breakpoints = {origin_dict_inv[k] : v for k, v in origin_breakpoints_str_k.items()}
+        # load class breaks
+        path = Path("test/app/test_resources/classes.csv")
+        class_breakpoints_str_k = gps.load_breakpoints(path)
+        print(class_breakpoints_str_k)
+        class_breakpoints = {class_dict_inv[k] : v for k, v in class_breakpoints_str_k.items()}
+        prefix_size = 2
+        team_size = 3
+        top_n = 100
+        pf = partial(gps.is_perfect_synergy, origin_breaks=origin_breakpoints, class_breaks=class_breakpoints)
+        ovr = gps.best_overall(units, prefix_size, team_size, pf, top_n)
+        # dump the queue to a list
+        ovr_list = list(ovr.queue)
+        # check that the top team is perfect synergy
+        assert gps.is_perfect_synergy(ovr_list[0][0], units, prefix_size, team_size)
+        # check that the top team is not perfect synergy
+        assert not gps.is_perfect_synergy(ovr_list[0][0], units, prefix_size, team_size, False)
