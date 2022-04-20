@@ -32,27 +32,21 @@ def load_units(path):
     units = [[unit[0].strip(), int(unit[1].strip()), unit[2].strip(), unit[3].strip(), unit[4].strip(), unit[5].strip()] for unit in units]
     # get a set of all unit names
     unit_names = set([unit[0] for unit in units])
-    # get a set of all origins 
-    origins = set([unit[2] for unit in units]).union(set([unit[3] for unit in units]))
-    # get a set of all classes
-    classes = set([unit[4] for unit in units]).union(set([unit[5] for unit in units]))
+    # get a set of all traits
+    traits = set([unit[2] for unit in units]).union(set([unit[3] for unit in units])).union(set([unit[4] for unit in units])).union(set([unit[5] for unit in units]))
     # create a dictionary mapping number to unit name
     unit_dict = {i:unit for i, unit in enumerate(unit_names)}
     # inverse of unit_dict
     unit_dict_inv = {unit:i for i, unit in enumerate(unit_names)}
-    # create a dict mapping number to origin
-    origin_dict = {i:origin for i, origin in enumerate(origins)}
-    # inverse of origin_dict
-    origin_dict_inv = {origin:i for i, origin in enumerate(origins)}
-    # create a dict mapping number to class
-    class_dict = {i:cls for i, cls in enumerate(classes)}
-    # inverse of class_dict
-    class_dict_inv = {cls:i for i, cls in enumerate(classes)}
+    # create a dict mapping number to trait
+    trait_dict = {i:trait for i, trait in enumerate(traits)}
+    # inverse of trait_dict
+    trait_dict_inv = {trait:i for i, trait in enumerate(traits)}
     # convert the units list to numbers using the dictionaries  
-    units = [[unit_dict_inv[unit[0]], unit[1], origin_dict_inv[unit[2]], origin_dict_inv[unit[3]], class_dict_inv[unit[4]], class_dict_inv[unit[5]]] for unit in units]
+    units = [[unit_dict_inv[unit[0]], unit[1], trait_dict_inv[unit[2]], trait_dict_inv[unit[3]], trait_dict_inv[unit[4]], trait_dict_inv[unit[5]]] for unit in units]
     # to np array for big zoom zoom
     units = np.array(units)
-    return units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv
+    return units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv
 def get_prefixes(units, prefix_size):
     """
     unit_ids: np array

@@ -7,15 +7,13 @@ class TestClass:
     def test_load_units(self):
         path = Path("test/app/test_resources/champs.csv")
         # load the units
-        units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv = gps.load_units(path)
+        units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv = gps.load_units(path)
         # check that the units are the correct length
         assert units.shape[0] == len(unit_dict)
         # check that the unit_dict is the same length as the inverse
         assert len(unit_dict) == len(unit_dict_inv)
-        # check that the origin dict is the same length as the inverse
-        assert len(origin_dict) == len(origin_dict_inv)
-        # check that the class dict is the same length as the inverse
-        assert len(class_dict) == len(class_dict_inv)
+        # check that the trait dict is the same length as the inverse
+        assert len(trait_dict) == len(trait_dict_inv)
         # check that the keys of unit dict are ints
         for k in unit_dict:
             assert isinstance(k, int)
@@ -29,30 +27,17 @@ class TestClass:
         for v in unit_dict_inv.values():
             assert isinstance(v, int)
         # check that the keys of origin dict are ints
-        for k in origin_dict:
+        for k in trait_dict:
             assert isinstance(k, int)
         # check that the values of origin dict are strings
-        for v in origin_dict.values():
+        for v in trait_dict.values():
             assert isinstance(v, str)
         # check that the keys of origin dict inv are strings
-        for k in origin_dict_inv:
+        for k in trait_dict_inv:
             assert isinstance(k, str)
         # check that the values of origin dict inv are ints
-        for v in origin_dict_inv.values():
+        for v in trait_dict_inv.values():
             assert isinstance(v, int)
-        # check that the keys of class dict are ints
-        for k in class_dict:
-            assert isinstance(k, int)   
-        # check that the values of class dict are strings
-        for v in class_dict.values():
-            assert isinstance(v, str)
-        # check that the keys of class dict inv are strings
-        for k in class_dict_inv:
-            assert isinstance(k, str)
-        # check that the values of class dict inv are ints
-        for v in class_dict_inv.values():
-            assert isinstance(v, int)
-
     def test_load_breakpoints(self):
         path = Path("test/app/test_resources/origins.csv")
         breakpoints = gps.load_breakpoints(path)
@@ -149,7 +134,7 @@ class TestClass:
     def test_is_perfect_synergy(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
-        units, unit_dict, unit_dict_inv, origin_dict, origin_dict_inv, class_dict, class_dict_inv = gps.load_units(path)
+        units, unit_dict, unit_dict_inv  = gps.load_units(path)
         # load origin breaks
         path = Path("test/app/test_resources/origins.csv")
         origin_breakpoints_str_k = gps.load_breakpoints(path)
