@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 from multiprocessing import Pool
 import itertools
@@ -8,7 +9,10 @@ import re
 import numpy as np
 import queue 
 import random
+import dask.bag as db
+import dask
 from functools import partial
+dask.config.set(scheduler='threads') 
 def load_breakpoints(path):
     """
     load breakpoints from a file
@@ -26,31 +30,42 @@ def load_units(path):
     """
     Loads units from a file.
     path: Path object
+    get back
+    units: dict int -> list of int showing which traits the unit has
+    unit_names: dict int -> string mapping unit id to name
+    unit_names_inv: dict string -> int mapping unit name to id
+    traits: dict int -> string mapping trait id to name
+    traits_inv: dict string -> int mapping trait name to id
+
     """
     with open(path, "r") as f:
         units = f.readlines()
-    # each line has format name, cost, origin1, origin2, class1, class2 
     # parse each line
     units = [unit.split(",") for unit in units]
-    # remove newline characters and whitespace
-    units = [[unit[0].strip(), int(unit[1].strip()), unit[2].strip(), unit[3].strip(), unit[4].strip(), unit[5].strip()] for unit in units]
-    # get a set of all unit names
-    unit_names = list([unit[0] for unit in units])
-    # get a set of all traits
-    traits = list(set([unit[2] for unit in units]).union(set([unit[3] for unit in units])).union(set([unit[4] for unit in units])).union(set([unit[5] for unit in units])))
-    # create a dictionary mapping number to unit name
-    unit_dict = {i:unit for i, unit in enumerate(unit_names)}
-    # inverse of unit_dict
-    unit_dict_inv = {unit:i for i, unit in enumerate(unit_names)}
-    # create a dict mapping number to trait
-    trait_dict = {i:trait for i, trait in enumerate(traits)}
-    # inverse of trait_dict
-    trait_dict_inv = {trait:i for i, trait in enumerate(traits)}
-    # convert the units list to numbers using the dictionaries  
-    units = [[unit_dict_inv[unit[0]], unit[1], trait_dict_inv[unit[2]], trait_dict_inv[unit[3]], trait_dict_inv[unit[4]], trait_dict_inv[unit[5]]] for unit in units]
-    # to np array for big zoom zoom
-    units = np.array(units)
-    return units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv
+    units = {}
+    unit_names = {}
+    unit_names_inv = {}
+    traits = {}
+    traits_inv = {}
+    # map id to unit name
+    for i, unit in enumerate(units):
+        units[i] = unit[2:6]
+        unit_names[i] = unit[0]
+        unit_names_inv[unit[0]] = i
+    # map id to trait name
+    # collect all unique traits
+    all_traits = set()
+    for unit in units:
+        all_traits.update(unit)
+    # map id to trait name
+    for i, trait in enumerate(all_traits):
+        traits[i] = trait
+        traits_inv[trait] = i
+    return units, unit_names, unit_names_inv, traits, traits_inv
+
+
+
+        
 
 def add_if_good(measure, queue, team):
     """
@@ -70,16 +85,16 @@ def add_if_good(measure, queue, team):
     else:
         print("insert initial")
         queue.put((measure_value, team))
-def best_of_size(units, size, measure, top_n):
+def best_of_size(units, size, measure, top_n, workers = 16, chunksize = 10000):
     """
     returns the top n teams of size size using measure to evaluate the teams
     """
-    p = Pool(processes=200)
+    p = Pool(processes=workers)
     combs = itertools.combinations(range(units.shape[0]), size)
     # copy of combs iterator
     first_combs, second_combs = itertools.tee(combs)
     # get the top n teams in parallel
-    all_teams_it = zip(p.imap(measure, first_combs, chunksize=10000), second_combs)
+    all_teams_it = zip(p.imap(measure, first_combs, chunksize=chunksize), second_combs)
     r = heapq.nlargest(top_n, all_teams_it, key=lambda x: x[0])
     p.close()
     return r
