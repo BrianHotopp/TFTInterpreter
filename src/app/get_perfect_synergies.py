@@ -79,7 +79,7 @@ def best_of_size(units, size, measure, top_n, workers = 16, chunksize = 10000):
     returns the top n teams of size size using measure to evaluate the teams
     """
     p = Pool(processes=workers)
-    combs = itertools.combinations(range(units.shape[0]), size)
+    combs = itertools.combinations(units.keys(), size)
     # copy of combs iterator
     first_combs, second_combs = itertools.tee(combs)
     # get the top n teams in parallel

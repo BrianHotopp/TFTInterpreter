@@ -206,31 +206,15 @@ class TestClass:
         )
         assert not perfect(t1_ids)
 
-    @pytest.mark.skip(reason="not implemented")
     def test_best_of_size(self):
         # load champs
         path = Path("test/app/test_resources/champs.csv")
         units, unit_dict, unit_dict_inv, trait_dict, trait_dict_inv = gps.load_units(
             path
         )
-        # load origin breaks
-        path = Path("test/app/test_resources/traits.csv")
-        trait_breaks_sk = gps.load_breakpoints(path)
-        trait_breaks = {trait_dict_inv[k]: v for k, v in trait_breaks_sk.items()}
-        team_size = 4
+        measure = perfect()
         top_n = 8
-        null_trait_id = trait_dict_inv[""]
-        traits_arr = np.zeros((4 * team_size,))
-        t_mask = np.zeros((4 * team_size,))
-        perfect = functools.partial(
-            gps.is_perfect_synergy,
-            units=units,
-            trait_breaks=trait_breaks,
-            null_trait_id=null_trait_id,
-            traits_arr=traits_arr,
-            t_mask=t_mask,
-        )
-        ovr = gps.best_of_size(units, team_size, perfect, top_n)
+        ovr = gps.best_of_size(units, 4, perfect, top_n)
         # dump the queue to a list
         print("Found the following teams:", ovr)
         # for each team, check that it is a perfect synergy
