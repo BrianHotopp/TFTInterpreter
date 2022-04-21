@@ -117,7 +117,7 @@ def is_perfect_synergy(team, units, trait_breaks, t_mask, t):
     for unit in team:
         t[t_len:t_len+len(units[unit])] = units[unit]
         t_len += len(units[unit])
-    # at this piont t is full of the ids of the traits of the team
+    # at this point t is full of the ids of the traits of the team
     # mask is all 0s
     # t_len is the total number of traits in the team
     # it's also the length of the mask

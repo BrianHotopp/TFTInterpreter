@@ -214,7 +214,8 @@ class TestClass:
         )
         measure = perfect()
         top_n = 8
-        ovr = gps.best_of_size(units, 4, perfect, top_n)
+        team_size = 5
+        ovr = gps.best_of_size(units, team_size, measure, top_n)
         # dump the queue to a list
         print("Found the following teams:", ovr)
         # for each team, check that it is a perfect synergy

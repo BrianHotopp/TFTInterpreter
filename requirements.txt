@@ -1,6 +1,5 @@
 detecto==1.2.2
 keyboard==0.13.5
-matplotlib==3.5.1
 mouse==0.7.1
 numpy==1.22.3
 opencv_python==4.5.5.64
