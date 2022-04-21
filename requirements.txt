@@ -13,4 +13,3 @@ pywin32; sys_platform=='win32'
 pytest
 Pillow~=9.0.1
 textual~=0.1.17
-opencv-python~=4.5.5.64
