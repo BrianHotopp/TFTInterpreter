@@ -9,10 +9,8 @@ import re
 import numpy as np
 import queue 
 import random
-import dask.bag as db
-import dask
 from functools import partial
-dask.config.set(scheduler='threads') 
+
 def load_breakpoints(path):
     """
     load breakpoints from a file
@@ -41,50 +39,27 @@ def load_units(path):
     with open(path, "r") as f:
         units = f.readlines()
     # parse each line
-    units = [unit.split(",") for unit in units]
+    data = [unit.split(",") for unit in units]
     units = {}
     unit_names = {}
     unit_names_inv = {}
     traits = {}
     traits_inv = {}
     # map id to unit name
-    for i, unit in enumerate(units):
+    for i, unit in enumerate(data):
         units[i] = unit[2:6]
         unit_names[i] = unit[0]
         unit_names_inv[unit[0]] = i
-    # map id to trait name
     # collect all unique traits
     all_traits = set()
     for unit in units:
-        all_traits.update(unit)
+        all_traits.update(units[unit])
     # map id to trait name
     for i, trait in enumerate(all_traits):
         traits[i] = trait
         traits_inv[trait] = i
     return units, unit_names, unit_names_inv, traits, traits_inv
 
-
-
-        
-
-def add_if_good(measure, queue, team):
-    """
-    measure: function to use to evaluate a combination
-    queue: thread safe priority queue
-    team: list of indexes of units
-    """
-    measure_value = measure(team)
-    # attempt to add to the priority queue if measure value is better (larger) than the worst element
-    if queue.full():
-        if measure_value > queue.queue[0][0]:
-            print("found a better team")
-            # remove the worst element
-            queue.get()
-            # add the new element
-            queue.put((measure_value, team))
-    else:
-        print("insert initial")
-        queue.put((measure_value, team))
 def best_of_size(units, size, measure, top_n, workers = 16, chunksize = 10000):
     """
     returns the top n teams of size size using measure to evaluate the teams
