@@ -47,7 +47,7 @@ def load_units(path):
     traits_inv = {}
     # map id to unit name
     for i, unit in enumerate(data):
-        units[i] = unit[2:6]
+        units[i] = list(map(lambda x: x.strip(), unit[2:6]))
         unit_names[i] = unit[0]
         unit_names_inv[unit[0]] = i
     # collect all unique traits
@@ -58,7 +58,21 @@ def load_units(path):
     for i, trait in enumerate(all_traits):
         traits[i] = trait
         traits_inv[trait] = i
+    # convert unit traits to trait ids
+    for unit in units:
+        units[unit] = [traits_inv[trait] for trait in units[unit]]
     return units, unit_names, unit_names_inv, traits, traits_inv
+def default_measure():
+    units_data_path = Path("src/resources/champs.csv")
+    units, unit_names, unit_names_inv, traits, traits_inv = gps.load_units(units_data_path)
+    # load breakpoints
+    breakpoints_path = Path("src/resources/traits.csv")
+    breakpoints_sk = load_breakpoints(breakpoints_path)
+    trait_breaks = {traits_inv[k]: v for k, v in breakpoints_sk.items()}
+    mask_size = max(map(lambda x: len(x), units.values())) * len(units)
+    t_mask = np.zeros((mask_size,))
+    t= np.zeros((mask_size,))
+    return functools.partial(is_perfect_synergy, units=units, trait_breaks=trait_breaks, t_mask=t_mask, t=t)
 
 def best_of_size(units, size, measure, top_n, workers = 16, chunksize = 10000):
     """
@@ -94,20 +108,22 @@ def fill_mask(mask, input_traits, l, id, breaks):
                     filled += 1
                     if filled == b:
                         break
-            
-def is_perfect_synergy(team, units, trait_breaks, null_trait_id, traits_arr, t_mask):
+
+def is_perfect_synergy(team, units, trait_breaks, t_mask, t):
     # build up the traits array
     # zero the mask
     t_mask[:] = 0
-    l = 0
-    for i in team:
-        # paste the masked values onto the next available indices of traits_arr
-        t = units[i][2:6][units[i][2:6] != null_trait_id]
-        traits_arr[l:l+t.shape[0]] = t
-        l += t.shape[0]
+    t_len = 0
+    for unit in team:
+        t[t_len:t_len+len(units[unit])] = units[unit]
+        t_len += len(units[unit])
+    # at this piont t is full of the ids of the traits of the team
+    # mask is all 0s
+    # t_len is the total number of traits in the team
+    # it's also the length of the mask
     for trait_id in trait_breaks:
-        fill_mask(t_mask, traits_arr, l, trait_id, trait_breaks[trait_id])
-    return int(np.all(t_mask[:l]))
+        fill_mask(t_mask, t, t_len, trait_id, trait_breaks[trait_id])
+    return int(np.all(t_mask[:t_len]))
 
 def main():
     units_data_path = Path("src/resources/champs.csv")

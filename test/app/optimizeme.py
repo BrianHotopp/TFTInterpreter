@@ -18,17 +18,8 @@ def test_best_of_size():
     null_trait_id = trait_dict_inv[""]
     traits_arr = np.zeros(((4 * team_size),))
     t_mask = np.zeros(((4 * team_size),))
-    perfect = functools.partial(
-        gps.is_perfect_synergy,
-        units=units,
-        trait_breaks=trait_breaks,
-        null_trait_id=null_trait_id,
-        traits_arr=traits_arr,
-        t_mask=t_mask
-    )
+    perfect = gps.perfect()
     for i in range(4, 9):
-            
-
         ovr = gps.best_of_size(units, i, perfect, top_n, workers=100, chunksize=1000)
         header = f"Found the following teams for team size {i}:"
         print(header)
