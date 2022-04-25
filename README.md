@@ -1,6 +1,6 @@
 # TFTInterpreter
 
-The Teamfight Tactics Interpreter is a continuously running loop that reads a TFT screenshot into a machine-readable format. By taking repeated screenshots of the planning phase of a TFT game, the interpreter represents all champions available and present. This is supplemented by a recommendation system that reviews the units in play and identifies the strongest available champion synergies to build an effective team.
+The Teamfight Tactics Interpreter is a continuously running loop that reads a TFT screenshot into a machine-readable format. By taking repeated screenshots of the planning phase of a TFT game, the interpreter represents all present champions. This is supplemented by a recommendation system that reviews the units in play and identifies the strongest available champion synergies to build an effective team.
 
 ---
 
@@ -12,12 +12,10 @@ The TFT Interpreter was written for Python version 3.10, and champion data is up
 ```
 git clone https://github.com/BrianHotopp/TFTInterpreter
 ```
-
 ##### Installing all module dependencies
 ```
 pip install -r requirements.txt
 ```
-
 ##### Creating training data
 
 Create the 'data' and 'models' directories in your local TFTInterpreter directory. 
