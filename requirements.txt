@@ -1,15 +1,8 @@
-detecto==1.2.2
-keyboard==0.13.5
-matplotlib==3.5.1
-mouse==0.7.1
-numpy==1.22.3
-opencv_python==4.5.5.64
-pandas==1.4.1
-PyAutoGUI==0.9.53
-torch==1.11.0
-torchvision==0.12.0
-psutil~=5.9.0
-pywin32; sys_platform=='win32'
-pytest
-Pillow~=9.0.1
-textual~=0.1.17
+--pre
+pillow
+pygetwindow
+pywin32
+toga
+briefcase
+detecto
+toga

@@ -9,3 +9,4 @@ build
 dist
 .idea
 gui_main.spec
+*.pth

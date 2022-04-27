@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Briefcase-Version: 0.3.6
+Name: tftinterpreter
+Formal-Name: TFT Interpreter
+App-ID: com.example.tftinterpreter
+Version: 0.0.1
+Home-page: https://github.com/BrianHotopp/beeware-interpreter
+Author: Brian Hotopp
+Author-email: brihoto@gmail.com
+Summary: TFT Assistant
