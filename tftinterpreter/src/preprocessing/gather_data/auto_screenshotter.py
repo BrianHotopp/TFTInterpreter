@@ -4,13 +4,11 @@
 import os
 import time
 from pathlib import Path
+
 # Third Party Imports
 import pyautogui
 import PIL
 from src.app.continuous_inference import Predictor
-# import numpy
-# import uuid
-# import cv2
 
 # Global Variables
 TOP_BAR_THICKNESS = 58

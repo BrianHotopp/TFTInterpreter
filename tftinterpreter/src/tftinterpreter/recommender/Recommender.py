@@ -1,7 +1,16 @@
-from ..predictor.Predictor import Predictor
+#!python
+
+# System Imports
 import json
 import heapq
+
+# Local Imports
+from ..predictor.Predictor import Predictor
+
 class Recommender:
+    """
+    The Recommender class provides recommendations.
+    """
     def __init__(self, labels_file_path: str, perfects_file_path: str) -> None:
         """
         Initialize a recommender object
@@ -13,6 +22,7 @@ class Recommender:
         self.full_to_abb = Predictor.get_labels(labels_file_path)
         self.abb_to_full = {v: k for k, v in self.full_to_abb.items()}
         self.perfects = Recommender.load_perfects(perfects_file_path)
+
     @staticmethod
     def load_perfects(perfects_file_path: str) -> dict:
         """
@@ -25,6 +35,7 @@ class Recommender:
             values are lists of lists of strings representing units 
         """
         return json.load(open(perfects_file_path))
+
     @staticmethod
     def jaccard_similarity(set1: set, set2: set) -> float:
         """
@@ -37,10 +48,13 @@ class Recommender:
         """
         return len(set1.intersection(set2)) / len(set1.union(set2)) 
 
-    def get_closest_matches(self, board_state):
+    def get_closest_matches(self, board_state: set) -> dict:
         """
         gets the perfect synergies that are closest to the board state
-        board state is a list of abbreviated unit names
+        Args:
+            board state: list of abbreviated unit names
+        Returns:
+            dictionary of perfect synergies
         """ 
         # map abbreviated unit names to full unit names and convert to set
         board_state = set([self.abb_to_full[unit] for unit in board_state])
@@ -51,9 +65,3 @@ class Recommender:
             # get nlargest using heapq by jaccard similarity
             closest_perfects[teamsize] = heapq.nlargest(3, self.perfects[teamsize], key=lambda x: self.jaccard_similarity(board_state, set(x)))
         return closest_perfects
-
-
-
-
-
-

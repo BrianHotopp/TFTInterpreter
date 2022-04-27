@@ -1,21 +1,25 @@
-import time
-from tkinter import scrolledtext
-import detecto
-import os
-import torch
+#!python
+
+# System Imports
 import argparse
-from detecto import utils
-from detecto.visualize import show_labeled_image, detect_live, detect_video
-from detecto.core import Dataset, DataLoader, Model
-import matplotlib.pyplot as plt
+
+# Third Party Imports
 import cv2
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
 import torch
+import detecto
+from detecto.visualize import detect_video
+from detecto.utils import normalize_transform
+from detecto.core import Dataset, DataLoader, Model
 import torchvision.ops.boxes as bops
-from detecto.utils import reverse_normalize, normalize_transform, _is_iterable
 from torchvision import transforms
-def custom_make_prediction(model, img):
+
+def custom_make_prediction(model, img) -> tuple(list, list, list):
+    """
+    Make a custom prediction.
+    Args:
+        model: the model
+        img: image to make prediction on
+    """
     labels, boxes, scores = model.predict(img)
     all_preds = filter(lambda x: x[2] > 0.2, zip(labels, boxes, scores))
     best = []
@@ -49,34 +53,32 @@ def custom_make_prediction(model, img):
         labels, scores = zip(*labelsandscores)
         boxes = [torch.reshape(x, (4,)) for x in boxes]
         boxes = torch.stack(boxes)
-    return labels, boxes, scores 
+    return labels, boxes, scores
+
 # command to run:
 # 
 # there is a bug in detecto that I monkey patched according to a github issue LOL
 """
 https://github.com/alankbi/detecto/issues/106
 """
-def detect_video(model, input_file, output_file, fps=30, score_filter=0.6):
-    """Takes in a video and produces an output video with object detection
+def detect_video(model: detecto.core.Model, input_file: str, output_file: str, \
+                    fps: int=30, score_filter: float=0.6) -> None:
+    """
+    Takes in a video and produces an output video with object detection
     run on it (i.e. displays boxes around detected objects in real-time).
     Output videos should have the .avi file extension. Note: some apps,
     such as macOS's QuickTime Player, have difficulty viewing these
     output videos. It's recommended that you download and use
     `VLC <https://www.videolan.org/vlc/index.html>`_ if this occurs.
-    :param model: The trained model with which to run object detection.
-    :type model: detecto.core.Model
-    :param input_file: The path to the input video.
-    :type input_file: str
-    :param output_file: The name of the output file. Should have a .avi
-        file extension.
-    :type output_file: str
-    :param fps: (Optional) Frames per second of the output video.
-        Defaults to 30.
-    :type fps: int
-    :param score_filter: (Optional) Minimum score required to show a
-        prediction. Defaults to 0.6.
-    :type score_filter: float
-    **Example**::
+
+    Args:
+        model: The trained model with which to run object detection.
+        input_file: The path to the input video.
+        output_file: The name of the output file. Should have a .avi file extension.
+        fps: (Optional) Frames per second of the output video. Defaults to 30.
+        score_filter: (Optional) Minimum score required to show a prediction. Defaults to 0.6.
+
+    **Example**:
         >>> from detecto.core import Model
         >>> from detecto.visualize import detect_video
         >>> model = Model.load('model_weights.pth', ['tick', 'gate'])
@@ -148,7 +150,8 @@ def detect_video(model, input_file, output_file, fps=30, score_filter=0.6):
 
     # Close all the frames
     cv2.destroyAllWindows()
-def main():
+
+if __name__ == "__main__":
     arg_p = argparse.ArgumentParser()
 
     arg_p.add_argument("-l", "--local_labels_dir",
@@ -192,6 +195,3 @@ def main():
         model.fit(loader, dataset, verbose=True, epochs=10)
         print("saving model")
         model.save(model_save_path)
-if __name__ == "__main__":
-    #test_detecto_working()
-    main()

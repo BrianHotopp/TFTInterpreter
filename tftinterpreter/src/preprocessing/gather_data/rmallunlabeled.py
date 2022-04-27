@@ -1,46 +1,18 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!python
 
-"""
-Name: rmallunlabeled.py
-Author: Brian Hotopp 
-Contact: brihoto@gmail.com  
-Time: 2022.02.25
-"""
-import shutil
+# System Imports
 import os
 import argparse
-import codecs
 
-import pandas as pd
-# read set 6 units in 
-SET_6_UNITS = dict()
-with open("./resources/set6_classes.txt") as classes_file_handle:
-    for line in classes_file_handle.readlines():
-        unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
-        SET_6_UNITS[unit_name] = abbreviated_name
-#print(SET_6_UNITS)
-# typos that I made during data entry
-typos = dict()
-typos["quinn"] = "quin"
-typos["leona"] = "leon"
-typos["silco"] = "silc"
-typos["syra"] = "zyra"
-typos["brand"] = "bran"
-typos["lcui"] = "luci"
-typos["poppy"] = "popp"
+# Third Party Imports
+import xml.etree.ElementTree as ET
 
-
-def crawl_labels(annotation_dir):
-    # To parse the xml files
-    import xml.etree.ElementTree as ET
-
-    # Return list
-    # the elements of this list represent rows of a csv
-    temp_res = []
-    counts = dict()
-    # Run through all the files
-    non = set()
+def crawl_labels(annotation_dir) -> None:
+    """
+    Crawls the labels and parses the XML.
+    Args:
+        annotation_dir: direction of annotations
+    """
     i = 0
     for file in os.listdir(annotation_dir):
         # Check the file name ends with xml
@@ -74,12 +46,25 @@ def crawl_labels(annotation_dir):
         print(f"changing the image file on disk from \n{old_image_full_path} to \n{new_image_full_path}")
         os.rename(old_image_full_path,new_image_full_path)
         i+=1
-# change the image filename in the annot
-# change the image path in the annot
-# change the annot filename on disk
-# change the image filename ondisk
 
 if __name__ == "__main__":
+    # read set 6 units in 
+    SET_6_UNITS = dict()
+    with open("./resources/set6_classes.txt") as classes_file_handle:
+        for line in classes_file_handle.readlines():
+            unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
+            SET_6_UNITS[unit_name] = abbreviated_name
+
+    # typos that I made during data entry
+    typos = dict()
+    typos["quinn"] = "quin"
+    typos["leona"] = "leon"
+    typos["silco"] = "silc"
+    typos["syra"] = "zyra"
+    typos["brand"] = "bran"
+    typos["lcui"] = "luci"
+    typos["poppy"] = "popp"
+
     # Add the argument parse
     arg_p = argparse.ArgumentParser()
     arg_p.add_argument("-l", "--local_labels_dir",

@@ -1,9 +1,13 @@
+#!python
+
+# Third Party Imports
 import detecto
 import detecto.core
 import cv2
 import torchvision.ops as ops
 import numpy as np
 from pathlib import Path
+
 class Predictor:
     """
     This class predicts the units on the image.
@@ -34,7 +38,7 @@ class Predictor:
         self.label_idx = {v: k for k, v in enumerate(self._labels.values())}
 
     @staticmethod
-    def get_labels(labels_file_name) -> dict:
+    def get_labels(labels_file_name: str) -> dict:
         """
         Get the labels of the set 6 units.
         Args:
@@ -51,7 +55,7 @@ class Predictor:
                 SET_6_UNITS[unit_name] = abbreviated_name
         return SET_6_UNITS
 
-    def predict_on_image(self, image):
+    def predict_on_image(self, image) -> tuple(list, list, list):
         """
         Predict unit(s) given image object.
         Args:
@@ -71,7 +75,7 @@ class Predictor:
         scores = scores[kept]
         return labels, boxes, scores
 
-    def predict_on_image_file(self, image_path, show_image_popup=False):
+    def predict_on_image_file(self, image_path, show_image_popup: bool=False) -> tuple(list, list, list):
         """
         Predict unit(s) given an image file.
         Args:
@@ -106,7 +110,7 @@ class Predictor:
         return open_cv_image
 
     @classmethod
-    def image_in_image(self, image1, image2, threshold = 0.8):
+    def image_in_image(self, image1, image2, threshold: float = 0.8) -> bool:
         """
         Determine if an image is in another image.
         Args:
@@ -124,7 +128,7 @@ class Predictor:
         return flag
 
     @classmethod
-    def in_planning_phase(screenshot):
+    def in_planning_phase(screenshot) -> bool:
         """
         Determine whether the player is in the planning phase.
         Args:

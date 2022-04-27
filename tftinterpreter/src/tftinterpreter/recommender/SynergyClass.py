@@ -1,31 +1,30 @@
+#!python
 
-'''
-Class Snode
-
-SNode is a mutable node which contains the list of champs associated 
-with that particular composition
-name = name of composition
-champs = list of champions
-
-@effects prints a string representation of the SNode
-printNode(self)
-
-No collaborators
-'''
 class SNode:
-
-   def __init__(self, name, champ):
+   """
+   SNode is a mutable node which contains the list of champs associated 
+   with that particular composition.
+   """
+   def __init__(self, name, champ) -> None:
+      """
+      Initialize an SNode object with the list of units and name of composition.
+      Args:
+         name: name of composition
+         champ: list of units
+      """
       self.champs = [champ]
       self.name = name
       
-   def printNode(self):
+   def printNode(self) -> None:
+      """
+      Prints the name of the composition and the units.
+      """
       print("NAME: ", self.name, "CHAMPS: ", self.champs)
 
 '''
 Class SGraph
 
-This is a mutable graph which contains a dictionary of SNode nodes. Each node contains all the champions 
-connected to a specific composition
+
 
 SDict = Dictionary of SNodes
 possibleUnits = list of possible units that would fill a composition
@@ -46,10 +45,14 @@ findComp(given champion list)
 @modifies creates and fills the SDict with SNodes
 readfile(self, given file name)
 
-I collaborated with Brian Hotopp while creating findComp(given champ list) 
 '''
 class SGraph:
-   def __init__(self):
+   def __init__(self) -> None:
+      """
+      Initialize an SGraph object.
+      This is a mutable graph which contains a dictionary of SNode nodes.
+      Each node contains all the champions connected to a specific composition.
+      """
       self.lvl4 = {
          0: ["poppy","ziggs","blitzcrank","vex"],
          1:["darius","morgana","senna","braum"],
@@ -63,34 +66,40 @@ class SGraph:
       self.lvl5= { 0: ["caitlyn","zilean","jhin","seraphine","jayce"] }
       self.lvl6 ={}
       self.lvl7 = {}
-      
-   #find what comps have champs in there
-   #if the comps already in possibleComps list skip
-   #if not add that comp to possibleComps
-   #Then match the comps from possibleComps 
-   #return what units aren't in comps in possibleUnits
-   
-   
-   def findComp(self,champList):
+
+   def findComp(self, champList: list) -> list:
+      """
+      Find what comps have units in the given list.
+      Args:
+         champList: list of units
+      Returns:
+         unit list containing the given list
+      """
+
+      #if the comps already in possibleComps list skip
+      #if not add that comp to possibleComps
+      #Then match the comps from possibleComps 
+      #return what units aren't in comps in possibleUnits
       for i in range (len(champList)):
          champList[i] = champList[i].lower()
       champList = set(champList)
       possibleUnits = {}
       possibleComps = {}
       
+      # level 4
       if(len(champList) <= 4):
          for i in range(8):
-            #lvl 4
             diffSet= set(self.lvl4.get(i)).difference(champList)
             if (len(diffSet) != len(self.lvl4.get(i)) and len(diffSet) != 0):
                index = i + 400
                possibleComps[index] = diffSet
       
-         #lvl 5
+      #lvl 5
       diffSet= set(self.lvl5.get(0)).difference(champList)
       if (len(diffSet) != len(self.lvl5.get(0))):
          possibleComps[500] = diffSet
             
+      # levels 6 and 7
       if(len(champList) >=5):
          for i in range(71):
             diffSet= set(self.lvl6.get(i)).difference(champList)
@@ -113,7 +122,10 @@ class SGraph:
 
       return list(unitSet)
    
-   def readFile(self):
+   def readFile(self) -> None:
+      """
+      Read the level 6 and 7 files.
+      """
       compIndex = -1
       file = open("lvl7.txt","rb")
       with open("lvl7.txt") as file:
@@ -153,14 +165,13 @@ class SGraph:
             tempList.append(name)
             self.lvl6[compIndex] = tempList
       file.close()
-'''
-sample main:
-G = SGraph() 
-G.readFile()
-G.findComp(["Lucian","irElia","sivir","jinx",'swain',"zilean"])
-output: ['corki', 'galio', 'gnar', 'illaoi', 'viktor', 'singed', 'camille', 
-         'zac', 'vex', 'orianna', 'alistar', 'poppy', 'seraphine', 'silco', 
-         'ziggs', 'lulu', 'warwick', 'jarvaniv', 'vi', 'tryndamere', 'renata', 
-         'tahmkench', 'blitzcrank', 'ezreal', 'jayce', 'jhin', 'caitlyn', 
-         'sejuani', 'senna', 'gangplank']
-'''
+
+if __name__ == '__main__':
+   G = SGraph() 
+   G.readFile()
+   G.findComp(["Lucian","irElia","sivir","jinx",'swain',"zilean"])
+   # output: ['corki', 'galio', 'gnar', 'illaoi', 'viktor', 'singed', 'camille', 
+   #          'zac', 'vex', 'orianna', 'alistar', 'poppy', 'seraphine', 'silco', 
+   #          'ziggs', 'lulu', 'warwick', 'jarvaniv', 'vi', 'tryndamere', 'renata', 
+   #          'tahmkench', 'blitzcrank', 'ezreal', 'jayce', 'jhin', 'caitlyn', 
+   #          'sejuani', 'senna', 'gangplank']

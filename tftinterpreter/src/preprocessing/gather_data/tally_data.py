@@ -1,31 +1,14 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!python
 
-"""
-Name: tally_data.py
-Author: Brian Hotopp 
-Contact: brihoto@gmail.com  
-Time: 2022.02.25
-"""
-
+# System Imports
 import os
 import argparse
-import codecs
 
-import pandas as pd
-# read set 6 units in 
-SET_6_UNITS = dict()
-with open("./resources/set6_classes.txt") as classes_file_handle:
-    for line in classes_file_handle.readlines():
-        unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
-        SET_6_UNITS[unit_name] = abbreviated_name
-
-
-
-def count_units(location):
+def count_units(location) -> None:
     """
-    location: the directory where label files are stored
-    returns: None, prints the number of training examples we have for each unit
+    Prints the number of training units.
+    Args:
+        location: the directory where label files are stored
     """
     import xml.etree.ElementTree as ET
 
@@ -68,6 +51,13 @@ def count_units(location):
             print(f"{key}:{a[key]}")
 
 if __name__ == "__main__":
+    # read set 6 units in 
+    SET_6_UNITS = dict()
+    with open("./resources/set6_classes.txt") as classes_file_handle:
+        for line in classes_file_handle.readlines():
+            unit_name, abbreviated_name = [x.strip() for x in line.split(",")]
+            SET_6_UNITS[unit_name] = abbreviated_name
+
     # Add the argument parse
     arg_p = argparse.ArgumentParser()
     arg_p.add_argument("-l", "--local_labels_dir",

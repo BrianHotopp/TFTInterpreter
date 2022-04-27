@@ -1,20 +1,20 @@
-"""
-TFT Assistant
-"""
-import time
+#!python
+
+# System Imports
+import sys
+
+# Third Party Imports
 import toga
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from toga.style.pack import COLUMN
 import PIL.Image as Image
-import PIL.ImageGrab as ImageGrab
-import uuid
 import asyncio
-import pygetwindow as gw
 from pathlib import Path
+
+# Local Imports
 from .predictor.Predictor import Predictor
 from .recommender.Recommender import Recommender
-import sys
-# fix briefcase stupid shit
+
 try:
     import win32gui
     import win32ui
@@ -24,14 +24,15 @@ try:
 except ModuleNotFoundError:
     print("Try to find 'app_packages' folder and to add this to python's 'site' package.")
     app_packages = ""
+
     for path in sys.path:
         if path.endswith("app_packages"):
             app_packages = path
+
     if app_packages == "":
         print("Couldn't find 'app_packages' folder.")
         raise ModuleNotFoundError
     else:
-        
         import site
         site.USER_SITE = app_packages  # correct the 'site-packages' path to 'app_packages' path
         site.main()  # recall site package thus all .pth in 'app_packages' will be add to sys.path
@@ -39,13 +40,15 @@ except ModuleNotFoundError:
         import win32ui
         import win32con
         from ctypes import windll
+
     for path in sys.path:
         print(path)
-# end fix briefcase stupid shit
 
 class TFTInterpreter(toga.App):
+    """
+    This class creates the GUI.
+    """
     here = Path(__file__).parent
-    print("What the fuck")
     labels_path = here/"predictor/static/set6_classes.csv"
     model_path = here/"predictor/static/set6_best_model.pth"
     perfects_path = here/"recommender/static/set6_perfect_synergies.json"
@@ -65,7 +68,13 @@ class TFTInterpreter(toga.App):
 
     predictor = Predictor(str(labels_path), str(model_path))
     recommender = Recommender(str(labels_path), str(perfects_path))
+
     def get_tft_window_screenshot(self) -> Image.Image:
+        """
+        Get TFT window screenshot.
+        Returns:
+            Image object of screenshot
+        """
         # returns a screenshot of the TFT window as a PIL image
         window_name = "League of Legends (TM) Client"
         hwnd = win32gui.FindWindow(None, window_name)
@@ -82,6 +91,7 @@ class TFTInterpreter(toga.App):
         left, top, right, bottom = win32gui.GetClientRect(hwnd)
         w = right - left
         h = bottom - top
+
         # magic numbers riina and I figured out
         boff = 45 
         loff = 11 
@@ -118,7 +128,6 @@ class TFTInterpreter(toga.App):
         win32gui.ReleaseDC(hdesktop, hwndDC)
 
         if result == None:
-            #PrintWindow Succeeded
             return im
 
     def get_rec(self):
@@ -131,8 +140,9 @@ class TFTInterpreter(toga.App):
         """
         im = self.get_tft_window_screenshot()
         p = self.predictor.predict_on_image(im)
-        return p 
-    def startup(self):
+        return p
+
+    def startup(self) -> None:
         """
         Construct and show the Toga application.
 
@@ -142,18 +152,21 @@ class TFTInterpreter(toga.App):
         """
         windll.shcore.SetProcessDpiAwareness(1)
         row_1 = toga.Box(style=Pack(direction=COLUMN))
+
         # label for units
         units_label = toga.Label('Units: ', style=Pack(padding=5))
         unit_text = toga.MultilineTextInput(readonly=True, style=Pack(height=120))
         row_1.add(units_label)
         row_1.add(unit_text)
         row_2 = toga.Box(style=Pack(direction=COLUMN))
+
         # label for recommendations
         rec_label = toga.Label('Recommendations: ', style=Pack(padding=5))
         rec_text = toga.MultilineTextInput(readonly=True, style=Pack(height=240))
         row_2.add(rec_label)
         row_2.add(rec_text)
-        row_3 = toga.Box(style=Pack(direction=COLUMN)) 
+        row_3 = toga.Box(style=Pack(direction=COLUMN))
+
         # button to get recommendations
         async def get_recommendations(widget):
             # async get units
@@ -163,17 +176,18 @@ class TFTInterpreter(toga.App):
             # format the units and recommendations
             un_abb_units = list(map(lambda x: self.recommender.abb_to_full[x], units[0]))
             units_txt ="\n".join(un_abb_units)
-            print("NEW UNITS TEXT")
-            print(units_txt)
+
+            # print("NEW UNITS TEXT")
+            # print(units_txt)
             recs_txt = ""
             for r in recs:
                 recs_txt += f"Team size: {r}\n"
                 for team in recs[r]:
                     using = set(un_abb_units).intersection(set(team))
-                    print("TEAM")
-                    print(set(un_abb_units))
-                    print("PERF")
-                    print(team)
+                    # print("TEAM")
+                    # print(set(un_abb_units))
+                    # print("PERF")
+                    # print(team)
                     needs = set(team).difference(using)
                     recs_txt += f"TEAM:\n"
                     recs_txt += "HAVE: " + ", ".join(using) + "\n"
@@ -181,6 +195,7 @@ class TFTInterpreter(toga.App):
             # update the text on the ui
             unit_text.value = units_txt
             rec_text.value = recs_txt
+
         button = toga.Button(
             'Get Recommendations',
             on_press=get_recommendations,

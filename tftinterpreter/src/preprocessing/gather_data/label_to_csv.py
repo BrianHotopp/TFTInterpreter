@@ -1,25 +1,22 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!python
 
-"""
-Name: single_to_multi_dir.py
-Author: Brian Hotopp 
-Contact: brihoto@gmail.com  
-Time: 2022.02.25
-"""
-
+# System Imports
 import os
 import argparse
-import codecs
 
+# Third Party Imports
 import pandas as pd
+import xml.etree.ElementTree as ET
 
-def xml2csv(location, path_prefix):
-    # To parse the xml files
-    import xml.etree.ElementTree as ET
-
-    # Return list
-    # the elements of this list represent rows of a csv
+def xml2csv(location, path_prefix: str) -> list:
+    """
+    Convert XML to CSV.
+    Args:
+        location: location of XML file
+        path_prefix: prefix of the path the file
+    Returns:
+        list where each element is a row in a csv
+    """
     temp_res = []
 
     # Run through all the files
@@ -75,7 +72,6 @@ def xml2csv(location, path_prefix):
             temp_res.append(temp_csv)
     return temp_res
 
-
 if __name__ == "__main__":
     # Add the argument parse
     arg_p = argparse.ArgumentParser()
@@ -102,4 +98,3 @@ if __name__ == "__main__":
                                     "x_max", "y_max",
                                     "x_min", "y_max"])
     res_csv.to_csv("res2.csv", index=False, header=False)
-

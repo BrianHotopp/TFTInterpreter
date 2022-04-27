@@ -1,14 +1,13 @@
-import time
-import detecto
-import os
-import torch
-import argparse
-from detecto import utils
-from detecto.visualize import show_labeled_image, detect_live
-from detecto.core import Dataset, DataLoader, Model
-import matplotlib.pyplot as plt
+#!python
 
-def main():
+# System Imports
+import argparse
+
+# Third Party Imports
+from detecto.visualize import detect_live
+from detecto.core import Dataset, DataLoader, Model
+
+if __name__ == "__main__":
     arg_p = argparse.ArgumentParser()
 
     arg_p.add_argument("-l", "--local_labels_dir",
@@ -49,6 +48,3 @@ def main():
         model.fit(loader, dataset, verbose=True, epochs=10)
         print("saving model")
         model.save(model_save_path)
-if __name__ == "__main__":
-    #test_detecto_working()
-    main()

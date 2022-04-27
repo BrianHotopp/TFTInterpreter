@@ -1,26 +1,20 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!python
 
-"""
-Name: cleaner.py
-Author: Brian Hotopp 
-Contact: brihoto@gmail.com  
-Time: 2022.02.25
-"""
-
+# System Imports
 import os
 import argparse
 
-def find_typos(location, units):
-    # To parse the xml files
-    import xml.etree.ElementTree as ET
+# Third Party Imports
+import xml.etree.ElementTree as ET
 
-    # Return list
-    # the elements of this list represent rows of a csv
-    temp_res = []
-    counts = dict()
+def find_typos(location, units: dict) -> None:
+    """
+    Find the typos in the given XML file.
+    Args:
+        location: path location of the XML file
+        units: dictionary of units
+    """
     # Run through all the files
-    non = set()
     for file in os.listdir(location):
         # Check the file name ends with xml
         if not file.endswith(".xml"):
@@ -32,6 +26,7 @@ def find_typos(location, units):
         # Open the xml name
         tree = ET.parse(file_whole_name)
         root = tree.getroot()
+
         # Find all the bounding objects
         print("Printing potential typos...")
         for label_object in root.findall("object"):
@@ -40,14 +35,16 @@ def find_typos(location, units):
             if classname not in units.values():
                 print(classname)
 
-def crawl_labels(location, dry_run):
+def crawl_labels(location, dry_run) -> None:
+    """
+    Crawls the labels and parses the XML.
+    Args:
+        location: location of XML file
+        dry_run: whether or not this is a dry run
+    """
     # To parse the xml files
     import xml.etree.ElementTree as ET
 
-    # Return list
-    # the elements of this list represent rows of a csv
-    temp_res = []
-    counts = dict()
     # Run through all the files
     non = set()
     for file in os.listdir(location):

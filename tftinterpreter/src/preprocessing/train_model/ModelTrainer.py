@@ -1,22 +1,28 @@
-import time
-import detecto
-import os
-import torch
+#!python
+
+# System Imports
 import argparse
-from detecto import utils
-from detecto.visualize import show_labeled_image
+
+# Third Party Imports
 from detecto.core import Dataset, DataLoader, Model
-import matplotlib.pyplot as plt
-import torchvision.ops.boxes as bops
 from pathlib import Path
 
-import numpy as np
-import matplotlib.pyplot as plt
 class ModelTrainer:
     """
-    class to hold information for model training
+    This class holds information for model training.
     """
     def __init__(self, classes_file_path, annotation_dir, images_dir, verbose=False, batch_size=2, shuffle=False, epochs=10) -> None:
+        """
+        Initialize a ModelTrainer object.
+        Args:
+            classes_file_path: path to the classes
+            annotation_dir: directory of the annotations
+            images_dir: directory of the images
+            verbose: boolean to print
+            batch_size: size of the batch
+            shuffle: whether or not to shuffle the data
+            epochs: number of epochs
+        """
         self.classes = self.get_classes(classes_file_path)
         self.annotations_dir = str(annotation_dir)
         self.images_dir = str(images_dir)
@@ -27,9 +33,13 @@ class ModelTrainer:
         self.model = None
 
     @staticmethod
-    def get_classes(classes_file_path):
+    def get_classes(classes_file_path: Path) -> dict:
         """
-        classes_file_path: path to a classes file
+        Gets the classes from the file to a dictionary.
+        Args:
+            classes_file_path: path to a classes file
+        Returns:
+            dictionary of classes
         """
         classes = {}
         with open(classes_file_path, 'r') as f:
@@ -39,19 +49,25 @@ class ModelTrainer:
                     line = line.split(',')
                     classes[line[0].strip()] = line[1].strip()
         return classes
-    def train(self):
+
+    def train(self) -> None:
+        """
+        Train the model.
+        """
         dataset = Dataset(self.annotations_dir, self.images_dir)
         loader = DataLoader(dataset, batch_size = self.batch_size, shuffle = self.shuffle)
         self.model = Model(list(self.classes.values()))
         self.model.fit(loader, dataset, self.verbose, self.epochs)
-    def save_model(self, save_path):
+
+    def save_model(self, save_path) -> None:
         """
-        save model to disk
-        save_path: python pathlib object to save model to
+        Save model to disk.
+        Args:
+            save_path: python pathlib object to save model to
         """
         self.model.save(str(save_path))
 
-def main():
+if __name__ == "__main__":
     arg_p = argparse.ArgumentParser()
 
     arg_p.add_argument("-l", "--local_labels_dir",
@@ -77,8 +93,3 @@ def main():
     model_trainer.train()
     # save model
     model_trainer.save_model()
-
-
-if __name__ == "__main__":
-    #test_detecto_working()
-    main()
